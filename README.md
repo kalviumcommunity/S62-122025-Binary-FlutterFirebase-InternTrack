@@ -86,3 +86,73 @@ flutter run
 
 ## Vision
 InternTrack aims to simplify and structure the internship and mentorship experience by bringing fragmented workflows into a single, intuitive platform—empowering students to focus on growth rather than coordination.
+
+---
+
+
+ # Flutter Environment Setup and First App Run
+
+## Steps Followed
+
+### 1. Flutter SDK Installation
+- Downloaded the Flutter SDK from the official Flutter website
+- Extracted the SDK and added `flutter/bin` to the system PATH
+- Verified the installation using:
+  ```bash
+  flutter doctor```
+
+### 2. Development Environment Setup
+
+- Installed Android Studio
+- Ensured Android SDK, Android Platform Tools, and Android Virtual Device (AVD) Manager were installed
+- Installed Flutter and Dart plugins in Android Studio
+- Set up VS Code with Flutter and Dart extensions for development
+
+### 3. Emulator Configuration
+
+- Opened Android Studio and accessed the Device Manager
+- Created a virtual device using a Pixel series phone model
+- Selected an Android system image (Android 13 or above)
+- Launched the emulator successfully
+Verified emulator detection using:
+
+``` flutter devices```
+
+### 4. First Flutter App Execution
+
+- Created a new Flutter project using:
+
+```flutter create .```
+- Ran the default Flutter counter application using:
+
+```flutter run```
+
+- Successfully launched the application on the Android emulator
+
+# Setup Verification
+
+## Flutter Doctor Output
+
+The following screenshot confirms a healthy Flutter setup with all required dependencies installed:
+
+![Flutter Doctor Output](flutter_doctor.png)
+
+---
+
+## Flutter App Running on Emulator
+
+The screenshot below shows the default Flutter application running successfully on the Android emulator:
+
+![Flutter App on Emulator](flutter_emulator.png)
+
+---
+
+## Reflection
+
+During the setup process, I faced challenges related to emulator configuration, Gradle dependency downloads, and Android device detection. Troubleshooting these issues helped me better understand how Flutter integrates with Android tooling and the importance of correct environment setup. Completing this process has prepared me to efficiently build, test, and debug Flutter applications across devices in upcoming sprint tasks.
+
+---
+
+## Conclusion
+
+The Flutter SDK, Android Studio, and Android emulator have been successfully configured, and the first Flutter application has been executed on an emulator. This confirms that the development environment is ready for further Flutter UI development and Firebase integration in subsequent sprint deliverables.
