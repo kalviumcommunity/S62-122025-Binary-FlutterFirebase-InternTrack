@@ -239,6 +239,17 @@ Screenshots of the running Flutter app and the counter interaction below.
 
 ---
 
+## Project Structure Overview
 
+The Flutter project follows a modular and scalable folder structure.  
+Detailed explanations of each folder and file can be found in [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md).
 
+---
 
+### Folder Structure
+
+![Project Structure](images/project_structure.png)
+
+## Reflection on Folder Structure
+
+Understanding the role of each Flutter folder helps maintain clean and organized code. A clear structure makes collaboration easier by allowing team members to work on separate features without conflicts.
