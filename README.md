@@ -135,7 +135,7 @@ Verified emulator detection using:
 
 The following screenshot confirms a healthy Flutter setup with all required dependencies installed:
 
-![Flutter Doctor Output](flutter_doctor.png)
+![Flutter Doctor Output](images/flutter_doctor.png)
 
 ---
 
@@ -143,7 +143,7 @@ The following screenshot confirms a healthy Flutter setup with all required depe
 
 The screenshot below shows the default Flutter application running successfully on the Android emulator:
 
-![Flutter App on Emulator](flutter_emulator.png)
+![Flutter App on Emulator](images/flutter_emulator.png)
 
 ---
 
@@ -235,7 +235,7 @@ Using `setState()`:
 ## Screenshots
 Screenshots of the running Flutter app and the counter interaction below.
 
-![Flutter App Screenshot](flutter_counter_app.png)
+![Flutter App Screenshot](images/flutter_counter_app.png)
 
 ---
 
