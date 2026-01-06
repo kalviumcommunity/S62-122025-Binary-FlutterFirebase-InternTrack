@@ -253,3 +253,49 @@ Detailed explanations of each folder and file can be found in [PROJECT_STRUCTURE
 ## Reflection on Folder Structure
 
 Understanding the role of each Flutter folder helps maintain clean and organized code. A clear structure makes collaboration easier by allowing team members to work on separate features without conflicts.
+
+
+---
+
+## Flutter & Dart Basics
+
+
+### Folder Structure
+
+```
+lib/
+├── main.dart
+├── screens/
+├── widgets/
+├── models/
+├── services/
+```
+
+**Directory Explanation**
+- **main.dart**: Entry point of the application that initializes the app and loads the first screen.
+- **screens/**: Contains complete UI screens/pages of the app.
+- **widgets/**: Reusable UI components shared across multiple screens.
+- **models/**: Data structures representing core app entities.
+- **services/**: Handles business logic and backend/service interactions (Firebase in later sprints).
+
+This structure supports modular design and makes the application easier to scale and maintain.
+
+---
+
+### Setup Instructions
+
+To run the project locally:
+
+```bash
+flutter pub get
+flutter run
+```
+
+---
+
+### Reflection
+
+This task helped me understand Flutter’s widget-based architecture and how Dart enables reactive UI updates using state management. Organizing the project into screens, widgets, models, and services clarified how complex Flutter applications are built and maintained, which will help significantly in future sprints.
+
+---
+
