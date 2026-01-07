@@ -299,3 +299,133 @@ This task helped me understand Flutter’s widget-based architecture and how Dar
 
 ---
 
+
+
+## Firebase Integration Using FlutterFire CLI
+
+This section documents **Integrating Firebase SDKs Using FlutterFire CLI and Packages**. The objective of this unit was to connect the existing Flutter project to Firebase using the official FlutterFire CLI and prepare the application for authentication, database, and storage services in a cross-platform manner.
+
+
+#### 1. Firebase Project & CLI Setup
+- Ensured an existing Firebase project was available in Firebase Console
+- Installed required tools:
+  ```bash
+  npm install -g firebase-tools
+  dart pub global activate flutterfire_cli
+  ```
+- Verified FlutterFire CLI installation:
+  ```bash
+  flutterfire --version
+  ```
+
+#### 2. Firebase Authentication (CLI Login)
+- Logged into Firebase using:
+  ```bash
+  firebase login
+  ```
+- Used the same Google account associated with the Firebase project
+
+#### 3. FlutterFire CLI Configuration
+- Ran the following command inside the Flutter project root:
+  ```bash
+  flutterfire configure
+  ```
+- Selected the correct Firebase project when prompted
+- Allowed FlutterFire CLI to auto-detect platforms (Android by default)
+
+This process automatically generated:
+- `lib/firebase_options.dart`
+- `firebase.json`
+- Platform-specific Firebase configuration files
+
+This eliminated the need for manual Firebase setup and ensured consistency across platforms.
+
+---
+
+### 4. Firebase Initialization in Flutter
+The application entry point was updated to initialize Firebase using the generated configuration:
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(const InternTrackApp());
+}
+```
+
+This confirms that Firebase is correctly initialized for the current platform at runtime.
+
+---
+
+### 5. Adding Firebase SDK Packages
+The following Firebase packages were added to support upcoming features:
+
+```yaml
+  firebase_core: ^4.3.0
+  firebase_auth: ^6.1.3          
+  cloud_firestore: ^6.1.1     
+  firebase_storage: ^13.0.5
+```
+
+Dependencies were installed using:
+```bash
+flutter pub get
+```
+
+These SDKs are now ready to be used for:
+- User authentication
+- Real-time database operations
+- Media and file storage
+
+---
+
+### 6. Verification
+- Ran the application using:
+  ```bash
+  flutter run
+  ```
+- Confirmed successful build and launch on Android emulator
+- Verified Firebase initialization logs in the terminal
+- Confirmed the app appears under **Firebase Console → Project Settings → Your Apps**
+
+---
+
+## Screenshots
+
+1. **FlutterFire CLI Configuration**
+   - Terminal output showing successful execution of:
+     ```bash
+     flutterfire configure
+     ```
+     ![FlutterFire CLI Configuration Output](images/flutterfire_configure.png)
+     
+
+2. **Generated Firebase Files**
+   - VS Code view showing:
+     - `lib/firebase_options.dart`
+     - `firebase.json`
+
+3. **Firebase Console Verification**
+   - Firebase Console screenshot showing the registered Android app
+   ![Firebase Console Verification](images/firebase_console.png)
+
+4. **Running Application**
+   - App running successfully on the Android emulator after Firebase initialization
+   ![App Running on Emulator](images/firebase_app_running.png)
+
+---
+
+## Reflection
+
+Using FlutterFire CLI significantly simplified Firebase integration by automating configuration steps that are otherwise error-prone when done manually. The CLI-based approach ensures cross-platform readiness and maintains consistent SDK versions across environments. This setup provides a strong backend foundation for implementing authentication, real-time data synchronization, and storage features in upcoming units.
+
+---
+
+
+

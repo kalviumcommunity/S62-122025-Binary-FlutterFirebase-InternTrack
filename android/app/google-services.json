@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1035293505494",
+    "project_id": "interntrack-33ad5",
+    "storage_bucket": "interntrack-33ad5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1035293505494:android:0c305843e4fa8ef11cd677",
+        "android_client_info": {
+          "package_name": "com.example.s62_122025_binary_flutterfirebase_interntrack"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCBGti-tCX2gSklypShheIhHEihl75WeCE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
