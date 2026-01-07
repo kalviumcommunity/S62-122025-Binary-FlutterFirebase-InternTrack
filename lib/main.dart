@@ -1,134 +1,299 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:s62_122025_binary_flutterfirebase_interntrack/firebase_options.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
-  runApp(const InternTrackApp());
+void main() {
+  runApp(InternTrackApp());
 }
 
 class InternTrackApp extends StatelessWidget {
-  const InternTrackApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'InternTrack',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: Colors.blue,
-        scaffoldBackgroundColor: Colors.white,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Color(0xFF4361EE),
+          primary: Color(0xFF4361EE),
+          secondary: Color(0xFF3A0CA3),
+          tertiary: Color(0xFF7209B7),
+        ),
+        fontFamily: 'Inter',
+        useMaterial3: true,
       ),
-      home: const WelcomeScreen(),
+      home: WelcomeScreen(),
     );
   }
 }
 
 class WelcomeScreen extends StatefulWidget {
-  const WelcomeScreen({super.key});
-
   @override
   State<WelcomeScreen> createState() => _WelcomeScreenState();
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
-  bool isClicked = false;
+  bool isStudent = true;
 
-  void toggleMessage() {
+  void toggleRole() {
     setState(() {
-      isClicked = !isClicked;
+      isStudent = !isStudent;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        centerTitle: true,
-        title: const Text(
-          'InternTrack',
-          style: TextStyle(
-            color: Colors.blue,
-            fontWeight: FontWeight.bold,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFF8F9FF),
+              Color(0xFFEFF2FF),
+            ],
           ),
         ),
-        iconTheme: const IconThemeData(color: Colors.blue),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Icon container
-            Container(
-              height: 120,
-              width: 120,
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.track_changes,
-                size: 60,
-                color: Colors.blue,
-              ),
-            ),
-
-            const SizedBox(height: 40),
-
-            const Text(
-              'Welcome to InternTrack',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            Text(
-              isClicked
-                  ? 'Track internships, manage progress, and collaborate with mentors — all in one place.'
-                  : 'A simple way to organize your internship journey.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey.shade700,
-              ),
-            ),
-
-            const SizedBox(height: 40),
-
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: toggleMessage,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Animated Icon with better design
+                AnimatedContainer(
+                  duration: Duration(milliseconds: 300),
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: isStudent
+                          ? [Color(0xFF4361EE), Color(0xFF3A0CA3)]
+                          : [Color(0xFF7209B7), Color(0xFFF72585)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: isStudent
+                            ? Color(0xFF4361EE).withOpacity(0.3)
+                            : Color(0xFF7209B7).withOpacity(0.3),
+                        blurRadius: 20,
+                        spreadRadius: 5,
+                      ),
+                    ],
                   ),
-                ),
-                child: Text(
-                  isClicked ? 'Continue' : 'Get Started',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                  child: Icon(
+                    isStudent ? Icons.school_outlined : Icons.people_alt_outlined,
+                    size: 60,
                     color: Colors.white,
                   ),
                 ),
-              ),
+                
+                SizedBox(height: 40),
+                
+                // Welcome Text
+                Text(
+                  'InternTrack',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1A1A2E),
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                
+                SizedBox(height: 12),
+                
+                // Description Text
+                Text(
+                  isStudent
+                      ? 'Your gateway to meaningful internships and professional growth'
+                      : 'Empower the next generation of professionals with your guidance',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFF6C757D),
+                    height: 1.5,
+                  ),
+                ),
+                
+                SizedBox(height: 40),
+                
+                // Role Selection Card
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0xFFE2E8F0).withOpacity(0.5),
+                        blurRadius: 30,
+                        offset: Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Continue as',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Color(0xFF4A5568),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      
+                      SizedBox(height: 16),
+                      
+                      // Student Option
+                      AnimatedContainer(
+                        duration: Duration(milliseconds: 200),
+                        decoration: BoxDecoration(
+                          color: isStudent
+                              ? Color(0xFF4361EE).withOpacity(0.1)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isStudent
+                                ? Color(0xFF4361EE)
+                                : Color(0xFFE2E8F0),
+                            width: isStudent ? 2 : 1,
+                          ),
+                        ),
+                        child: ListTile(
+                          onTap: () => setState(() => isStudent = true),
+                          leading: Icon(
+                            Icons.school_outlined,
+                            color: isStudent
+                                ? Color(0xFF4361EE)
+                                : Color(0xFFA0AEC0),
+                          ),
+                          title: Text(
+                            'Student',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: isStudent
+                                  ? Color(0xFF4361EE)
+                                  : Color(0xFF4A5568),
+                            ),
+                          ),
+                          subtitle: Text(
+                            'Find and track internships',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isStudent
+                                  ? Color(0xFF4361EE).withOpacity(0.7)
+                                  : Color(0xFFA0AEC0),
+                            ),
+                          ),
+                          trailing: isStudent
+                              ? Icon(
+                                  Icons.check_circle_rounded,
+                                  color: Color(0xFF4361EE),
+                                )
+                              : null,
+                        ),
+                      ),
+                      
+                      SizedBox(height: 12),
+                      
+                      // Mentor Option
+                      AnimatedContainer(
+                        duration: Duration(milliseconds: 200),
+                        decoration: BoxDecoration(
+                          color: !isStudent
+                              ? Color(0xFF7209B7).withOpacity(0.1)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: !isStudent
+                                ? Color(0xFF7209B7)
+                                : Color(0xFFE2E8F0),
+                            width: !isStudent ? 2 : 1,
+                          ),
+                        ),
+                        child: ListTile(
+                          onTap: () => setState(() => isStudent = false),
+                          leading: Icon(
+                            Icons.people_alt_outlined,
+                            color: !isStudent
+                                ? Color(0xFF7209B7)
+                                : Color(0xFFA0AEC0),
+                          ),
+                          title: Text(
+                            'Mentor',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: !isStudent
+                                  ? Color(0xFF7209B7)
+                                  : Color(0xFF4A5568),
+                            ),
+                          ),
+                          subtitle: Text(
+                            'Guide and support students',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: !isStudent
+                                  ? Color(0xFF7209B7).withOpacity(0.7)
+                                  : Color(0xFFA0AEC0),
+                            ),
+                          ),
+                          trailing: !isStudent
+                              ? Icon(
+                                  Icons.check_circle_rounded,
+                                  color: Color(0xFF7209B7),
+                                )
+                              : null,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                SizedBox(height: 32),
+                
+                // Continue Button
+                ElevatedButton(
+                  onPressed: toggleRole,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isStudent
+                        ? Color(0xFF4361EE)
+                        : Color(0xFF7209B7),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shadowColor: Colors.transparent,
+                    minimumSize: Size(double.infinity, 56),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: Text(
+                    'Continue',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                
+                SizedBox(height: 20),
+                
+                // Skip for now option
+                TextButton(
+                  onPressed: () {},
+                  child: Text(
+                    'Skip for now',
+                    style: TextStyle(
+                      color: Color(0xFF718096),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
