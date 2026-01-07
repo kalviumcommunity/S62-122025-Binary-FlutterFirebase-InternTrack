@@ -427,5 +427,68 @@ Using FlutterFire CLI significantly simplified Firebase integration by automatin
 
 ---
 
+## Understanding the Widget Tree and Flutter's Reactive UI Model
 
+### Project Description
+This demo focuses on the **InternTrack Welcome Screen**, built using Flutter to demonstrate the **widget tree structure** and **reactive UI model**. The screen allows users to toggle between *Student* and *Mentor* roles, with the UI updating automatically based on state changes.
 
+---
+
+### Widget Tree Hierarchy
+The Welcome Screen UI is composed of nested widgets arranged in a hierarchical widget tree:
+
+```text
+MaterialApp
+└── WelcomeScreen
+    └── Scaffold
+        └── Container (Background)
+            └── Center
+                └── Padding
+                    └── Column (Main Content)
+                        ├── AnimatedContainer (Icon with Gradient)
+                        ├── Text (App Title)
+                        ├── Text (Description)
+                        ├── Container (Role Selection Card)
+                        │   └── Column
+                        │       ├── Text ("Continue as")
+                        │       ├── ListTile (Student Option)
+                        │       └── ListTile (Mentor Option)
+                        ├── ElevatedButton (Continue)
+                        └── TextButton (Skip)
+
+```
+
+This structure shows clear parent–child relationships between widgets.
+
+---
+
+### Reactive UI Behavior
+- A boolean state variable controls the displayed role (Student / Mentor)
+- Pressing the button triggers `setState()`
+- Flutter automatically rebuilds only the affected widgets
+
+### Before State Change
+![Welcome Screen Student](images/welcome_student.png)
+
+### After State Change
+![Welcome Screen Mentor](images/welcome_mentor.png)
+
+---
+
+## Concept Explanation
+
+### What is a Widget Tree?
+In Flutter, everything is a widget. Widgets are arranged hierarchically in a widget tree where each widget is a node that defines part of the UI.
+
+### How does Flutter’s reactive model work?
+Flutter follows a reactive UI model where changes in application state automatically trigger UI updates using `setState()` without manual redrawing.
+
+### Why does Flutter rebuild only parts of the UI?
+Flutter efficiently rebuilds only the widgets affected by state changes instead of the entire screen, resulting in better performance and smoother UI updates.
+
+---
+
+## Reflection
+Understanding the widget tree and Flutter’s reactive UI model made it easier to design the InternTrack welcome screen efficiently. This approach supports scalable UI development and smooth collaboration when multiple developers work on different features.
+
+---
