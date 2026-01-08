@@ -492,3 +492,148 @@ Flutter efficiently rebuilds only the widgets affected by state changes instead 
 Understanding the widget tree and Flutter’s reactive UI model made it easier to design the InternTrack welcome screen efficiently. This approach supports scalable UI development and smooth collaboration when multiple developers work on different features.
 
 ---
+
+# Firebase Authentication (Email & Password)
+
+## Overview
+This part of the InternTrack project implements **Firebase Authentication using Email & Password** in a Flutter application.  
+Firebase Auth provides a secure, scalable, and backend-free solution for handling user signups, logins, and session management.
+
+By completing this task, the app now allows users to:
+- Register a new account using email & password
+- Log in securely
+- Maintain authentication state across app restarts
+- Log out safely
+- Verify user presence in the Firebase Console
+
+---
+
+## Tech Stack
+- **Flutter**
+- **Firebase Authentication**
+- **Firebase Core**
+- **FlutterFire CLI**
+
+---
+
+## Features Implemented
+- Email & Password **Signup**
+- Email & Password **Login**
+- Authentication state handling using `authStateChanges()`
+- Secure **Logout**
+- Error handling for common authentication issues
+- Firebase Console verification of registered users
+
+---
+
+## Setup Instructions
+
+### 1️.Enable Firebase Authentication
+1. Go to **Firebase Console**
+2. Navigate to **Authentication → Sign-in method**
+3. Enable **Email/Password**
+4. Click **Save**
+
+---
+
+### 2️. Add Dependencies
+```yaml
+dependencies:
+  firebase_core: ^3.0.0
+  firebase_auth: ^5.0.0
+```
+
+Run:
+```bash
+flutter pub get
+```
+
+---
+
+### 3️.Initialize Firebase
+Firebase is initialized before running the app:
+
+```dart
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(InternTrackApp());
+}
+```
+
+---
+
+## Authentication Logic
+
+### Signup
+```dart
+await FirebaseAuth.instance.createUserWithEmailAndPassword(
+  email: email,
+  password: password,
+);
+```
+
+### Login
+```dart
+await FirebaseAuth.instance.signInWithEmailAndPassword(
+  email: email,
+  password: password,
+);
+```
+
+### Logout
+```dart
+await FirebaseAuth.instance.signOut();
+```
+
+### Authentication State Handling
+```dart
+FirebaseAuth.instance.authStateChanges()
+```
+
+This ensures:
+- Logged-in users are redirected to **HomeScreen**
+- Logged-out users are redirected to **WelcomeScreen**
+
+---
+
+## Verification
+After successful signup/login:
+1. Open **Firebase Console**
+2. Go to **Authentication → Users**
+3. Verify that the user email appears in the list
+
+---
+
+## Common Errors Handled
+| Error | Cause | Handling |
+|-----|------|---------|
+| Invalid email | Wrong format | Validation + Firebase error |
+| Weak password | < 6 characters | Manual validation |
+| User not found | Email not registered | Firebase error handling |
+| Wrong password | Incorrect password | Firebase error handling |
+| Firebase not initialized | Missing setup | Firebase initialized in `main.dart` |
+
+---
+
+## Reflection
+
+### How does Firebase simplify authentication?
+Firebase eliminates the need to build and manage a custom authentication backend. It handles:
+- Secure credential storage
+- Token management
+- Session persistence
+- Cross-platform authentication
+
+### What security features make it better than custom auth?
+- Industry-standard encryption
+- Secure token-based sessions
+- Built-in protection against common auth vulnerabilities
+- Backend managed by Google
+
+### Challenges Faced
+- Understanding authentication state handling
+- Managing navigation after login/logout
+- Handling FirebaseAuthException cases cleanly

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:s62_122025_binary_flutterfirebase_interntrack/firebase_options.dart';
+import 'screens/welcome_screen.dart';
+import 'screens/auth_screen.dart';
+import 'screens/home_screen.dart';
 
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(InternTrackApp());
 }
 
@@ -20,290 +22,63 @@ class InternTrackApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Color(0xFF4361EE),
-          primary: Color(0xFF4361EE),
-          secondary: Color(0xFF3A0CA3),
-          tertiary: Color(0xFF7209B7),
+          seedColor: Color(0xFF4A90E2),
+          primary: Color(0xFF4A90E2),
+          secondary: Color(0xFF5CA0F2),
         ),
+        scaffoldBackgroundColor: Color(0xFFF8FAFB),
         fontFamily: 'Inter',
         useMaterial3: true,
+        appBarTheme: AppBarTheme(
+          elevation: 0,
+          centerTitle: true,
+          backgroundColor: Colors.white,
+          foregroundColor: Color(0xFF2C3E50),
+        ),
       ),
-      home: WelcomeScreen(),
+      home: AuthWrapper(),
     );
   }
 }
 
-class WelcomeScreen extends StatefulWidget {
-  @override
-  State<WelcomeScreen> createState() => _WelcomeScreenState();
-}
-
-class _WelcomeScreenState extends State<WelcomeScreen> {
-  bool isStudent = true;
-
-  void toggleRole() {
-    setState(() {
-      isStudent = !isStudent;
-    });
-  }
-
+class AuthWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFF8F9FF),
-              Color(0xFFEFF2FF),
-            ],
-          ),
-        ),
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Animated Icon with better design
-                AnimatedContainer(
-                  duration: Duration(milliseconds: 300),
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: isStudent
-                          ? [Color(0xFF4361EE), Color(0xFF3A0CA3)]
-                          : [Color(0xFF7209B7), Color(0xFFF72585)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: isStudent
-                            ? Color(0xFF4361EE).withOpacity(0.3)
-                            : Color(0xFF7209B7).withOpacity(0.3),
-                        blurRadius: 20,
-                        spreadRadius: 5,
-                      ),
-                    ],
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            backgroundColor: Colors.white,
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4A90E2)),
+                    strokeWidth: 3,
                   ),
-                  child: Icon(
-                    isStudent ? Icons.school_outlined : Icons.people_alt_outlined,
-                    size: 60,
-                    color: Colors.white,
-                  ),
-                ),
-                
-                SizedBox(height: 40),
-                
-                // Welcome Text
-                Text(
-                  'InternTrack',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1A1A2E),
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                
-                SizedBox(height: 12),
-                
-                // Description Text
-                Text(
-                  isStudent
-                      ? 'Your gateway to meaningful internships and professional growth'
-                      : 'Empower the next generation of professionals with your guidance',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Color(0xFF6C757D),
-                    height: 1.5,
-                  ),
-                ),
-                
-                SizedBox(height: 40),
-                
-                // Role Selection Card
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color(0xFFE2E8F0).withOpacity(0.5),
-                        blurRadius: 30,
-                        offset: Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        'Continue as',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Color(0xFF4A5568),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      
-                      SizedBox(height: 16),
-                      
-                      // Student Option
-                      AnimatedContainer(
-                        duration: Duration(milliseconds: 200),
-                        decoration: BoxDecoration(
-                          color: isStudent
-                              ? Color(0xFF4361EE).withOpacity(0.1)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isStudent
-                                ? Color(0xFF4361EE)
-                                : Color(0xFFE2E8F0),
-                            width: isStudent ? 2 : 1,
-                          ),
-                        ),
-                        child: ListTile(
-                          onTap: () => setState(() => isStudent = true),
-                          leading: Icon(
-                            Icons.school_outlined,
-                            color: isStudent
-                                ? Color(0xFF4361EE)
-                                : Color(0xFFA0AEC0),
-                          ),
-                          title: Text(
-                            'Student',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: isStudent
-                                  ? Color(0xFF4361EE)
-                                  : Color(0xFF4A5568),
-                            ),
-                          ),
-                          subtitle: Text(
-                            'Find and track internships',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isStudent
-                                  ? Color(0xFF4361EE).withOpacity(0.7)
-                                  : Color(0xFFA0AEC0),
-                            ),
-                          ),
-                          trailing: isStudent
-                              ? Icon(
-                                  Icons.check_circle_rounded,
-                                  color: Color(0xFF4361EE),
-                                )
-                              : null,
-                        ),
-                      ),
-                      
-                      SizedBox(height: 12),
-                      
-                      // Mentor Option
-                      AnimatedContainer(
-                        duration: Duration(milliseconds: 200),
-                        decoration: BoxDecoration(
-                          color: !isStudent
-                              ? Color(0xFF7209B7).withOpacity(0.1)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: !isStudent
-                                ? Color(0xFF7209B7)
-                                : Color(0xFFE2E8F0),
-                            width: !isStudent ? 2 : 1,
-                          ),
-                        ),
-                        child: ListTile(
-                          onTap: () => setState(() => isStudent = false),
-                          leading: Icon(
-                            Icons.people_alt_outlined,
-                            color: !isStudent
-                                ? Color(0xFF7209B7)
-                                : Color(0xFFA0AEC0),
-                          ),
-                          title: Text(
-                            'Mentor',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: !isStudent
-                                  ? Color(0xFF7209B7)
-                                  : Color(0xFF4A5568),
-                            ),
-                          ),
-                          subtitle: Text(
-                            'Guide and support students',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: !isStudent
-                                  ? Color(0xFF7209B7).withOpacity(0.7)
-                                  : Color(0xFFA0AEC0),
-                            ),
-                          ),
-                          trailing: !isStudent
-                              ? Icon(
-                                  Icons.check_circle_rounded,
-                                  color: Color(0xFF7209B7),
-                                )
-                              : null,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                SizedBox(height: 32),
-                
-                // Continue Button
-                ElevatedButton(
-                  onPressed: toggleRole,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isStudent
-                        ? Color(0xFF4361EE)
-                        : Color(0xFF7209B7),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shadowColor: Colors.transparent,
-                    minimumSize: Size(double.infinity, 56),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: Text(
-                    'Continue',
+                  SizedBox(height: 20),
+                  Text(
+                    'Loading...',
                     style: TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF7A8A99),
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                ),
-                
-                SizedBox(height: 20),
-                
-                // Skip for now option
-                TextButton(
-                  onPressed: () {},
-                  child: Text(
-                    'Skip for now',
-                    style: TextStyle(
-                      color: Color(0xFF718096),
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ),
-      ),
+          );
+        }
+        
+        if (snapshot.hasData && snapshot.data != null) {
+          return HomeScreen();
+        }
+        
+        return WelcomeScreen();
+      },
     );
   }
 }
