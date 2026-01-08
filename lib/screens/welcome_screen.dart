@@ -150,6 +150,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   height: 54,
                   child: ElevatedButton(
                     onPressed: () {
+                     debugPrint('Get Started clicked. Role: ${isStudent ? 'Student' : 'Mentor'}');
                       Navigator.push(
                         context,
                         MaterialPageRoute(

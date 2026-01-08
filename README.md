@@ -637,3 +637,63 @@ Firebase eliminates the need to build and manage a custom authentication backend
 - Understanding authentication state handling
 - Managing navigation after login/logout
 - Handling FirebaseAuthException cases cleanly
+
+---
+
+#  Hot Reload, Debug Console & DevTools Demo
+
+## Project Overview
+This demo is part of Sprint-2 and showcases the use of **Flutter Hot Reload**, the **Debug Console**, and **Flutter DevTools** using the InternTrack Flutter application. The goal is to understand how these tools improve development speed, debugging, and UI inspection while building a reactive Flutter app.
+
+The demonstration is performed on the **Welcome Screen**, which allows users to select a role (Student or Mentor) and navigate forward.
+
+---
+
+## Steps Performed
+
+### 1. Hot Reload
+- Ran the Flutter app in debug mode using `flutter run`.
+- Modified a text widget on the Welcome Screen.
+- Saved the file to trigger Hot Reload.
+- Observed instant UI updates without restarting the app or losing state.
+
+### 2. Debug Console
+- Added a `debugPrint()` statement to the **Get Started** button.
+- Interacted with the app by clicking the button.
+- Verified runtime log output in the Debug Console.
+
+### 3. Flutter DevTools
+- Opened Flutter DevTools from VS Code while the app was running.
+- Explored the **Widget Inspector** to visualize the widget tree.
+- Inspected UI elements to understand widget hierarchy and structure.
+
+---
+
+## Screenshots
+
+### Hot Reload in Action
+![Hot Reload Demo](images/hot_reload.png)
+
+### Debug Console Output
+![Debug Console Output](images/debug_console.png)
+
+### Flutter DevTools – Widget Inspector
+![Flutter DevTools](images/devtools.png)
+---
+
+## Reflection
+
+### How does Hot Reload improve productivity?
+Hot Reload allows developers to instantly see UI changes without restarting the app, which significantly speeds up development and UI iteration.
+
+### Why is DevTools useful for debugging and optimization?
+Flutter DevTools provides visual tools like the Widget Inspector and performance graphs, helping developers understand widget structure, detect issues, and optimize app performance.
+
+### How can these tools be used in a team workflow?
+In a team environment, these tools help developers debug faster, maintain consistent UI behavior, quickly review changes, and collaborate efficiently without repeated app restarts.
+
+---
+
+## Conclusion
+This exercise demonstrates how Flutter’s development tools enable fast iteration, effective debugging, and better understanding of the reactive UI model, making them essential for building scalable applications like InternTrack.
+
