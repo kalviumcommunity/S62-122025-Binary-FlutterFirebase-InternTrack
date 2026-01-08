@@ -3,7 +3,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:s62_122025_binary_flutterfirebase_interntrack/firebase_options.dart';
 import 'screens/welcome_screen.dart';
-import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 
 void main() async {
