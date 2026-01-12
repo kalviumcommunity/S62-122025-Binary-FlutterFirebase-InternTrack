@@ -637,3 +637,226 @@ Firebase eliminates the need to build and manage a custom authentication backend
 - Understanding authentication state handling
 - Managing navigation after login/logout
 - Handling FirebaseAuthException cases cleanly
+
+#  Firestore Database Design
+
+## Project Overview
+
+This document defines the Firestore database structure used to store all application data.
+
+---
+
+##  Why Firestore?
+Cloud Firestore is a real-time NoSQL database provided by Firebase. It allows:
+- Instant syncing of data across devices
+- Offline support
+- Scalable data storage
+- Secure access using Firebase Authentication
+
+It is ideal for InternTrack because:
+- Internship updates need to sync instantly
+- Mentor feedback should appear in real time
+- Students and mentors need role-based access
+
+---
+
+##  Data Requirements
+
+The InternTrack app needs to store:
+
+- Users (students and mentors)
+- User profiles
+- Internship applications
+- Mentor-student relationships
+- Feedback messages
+- Help requests
+- Uploaded resumes
+
+---
+
+##  Firestore Collections
+
+The database uses these top-level collections:
+
+- `users`
+- `internships`
+- `mentorships`
+- `feedbacks`
+- `helpRequests`
+- `resumes`
+
+---
+
+## 📁Firestore Schema
+
+---
+
+## 1. `users`
+Stores both students and mentors.
+
+**Path**: `users/{userId}`
+
+| Field | Type | Description |
+|------|------|------------|
+| name | string | Full name |
+| email | string | Login email |
+| role | string | `"student"` or `"mentor"` |
+| createdAt | timestamp | Account creation time |
+
+**Sample Document**
+```json
+{
+  "name": "Asha",
+  "email": "asha@gmail.com",
+  "role": "student",
+  "createdAt": "2025-01-08T10:20:00Z"
+}
+```
+
+## 2️.  **internships**
+
+Each student can have multiple internship applications.
+
+### Path
+`internships/{internshipId}`
+
+### Fields
+| Field | Type | Description | Required |
+|-------|------|-------------|----------|
+| `studentId` | string | Reference to users | ✅ |
+| `companyName` | string | Company name | ✅ |
+| `position` | string | Job title | ✅ |
+| `status` | string | `applied` / `interview` / `offer` / `rejected` | ✅ |
+| `appliedDate` | timestamp | Date applied | ✅ |
+| `deadline` | timestamp | Optional deadline | ❌ |
+| `notes` | string | Optional notes | ❌ |
+| `createdAt` | timestamp | Creation time | ✅ |
+
+### Sample Document
+```json
+{
+  "studentId": "uid123",
+  "companyName": "Google",
+  "position": "Software Intern",
+  "status": "applied",
+  "appliedDate": "2025-01-05",
+  "deadline": "2025-01-20",
+  "notes": "Referred by alumni",
+  "createdAt": "2025-01-05"
+}
+```
+## 3. Mentorships Collection
+
+This collection links **students** with **mentors**.
+
+---
+
+###  Path: `mentorships/{mentorshipId}`
+
+
+---
+
+###  Fields
+
+| Field     | Type      | Description        | Required |
+|-----------|-----------|--------------------|----------|
+| studentId | string    | Student user ID    | ✅ |
+| mentorId  | string    | Mentor user ID     | ✅ |
+| status    | string    | `pending` / `active` | ✅ |
+| createdAt | timestamp | Creation time      | ✅ |
+
+---
+
+### 📄 Sample Document
+
+```json
+{
+  "studentId": "uid123",
+  "mentorId": "uid456",
+  "status": "active",
+  "createdAt": "2025-01-06"
+}
+
+```
+## 4.  Feedbacks Collection
+
+Mentors give feedback to students about their internships and progress.
+
+---
+
+###  Path: `feedbacks/{feedbackId}`
+
+---
+
+### 📋 Fields
+
+| Field         | Type      | Description |
+|---------------|-----------|-------------|
+| studentId     | string    | Student user ID |
+| mentorId      | string    | Mentor user ID |
+| internshipId  | string    | Related internship ID (optional) |
+| message       | string    | Feedback message |
+| createdAt     | timestamp | When the feedback was created |
+| isRead        | boolean   | Whether the student has read the feedback |
+
+---
+
+### 📄 Sample Document
+
+```json
+{
+  "studentId": "uid123",
+  "mentorId": "uid456",
+  "internshipId": "internship789",
+  "message": "Your resume looks strong. Improve project section.",
+  "createdAt": "2025-01-07",
+  "isRead": false
+}
+
+```
+## 5.  Help Requests Collection
+
+Students ask mentors for guidance and support.
+
+--- 
+###  Path   : `helpRequests/{requestId}`
+
+---
+
+### 📋 Fields
+
+| Field        | Type      | Description |
+|--------------|-----------|-------------|
+| studentId    | string    | Student user ID |
+| mentorId     | string    | Mentor user ID |
+| message      | string    | Help request message |
+| response     | string    | Mentor’s reply |
+| status       | string    | `pending` or `responded` |
+| createdAt    | timestamp | When the request was created |
+| respondedAt  | timestamp | When the mentor responded |
+
+---
+
+### 📄 Sample Document
+
+```json
+{
+  "studentId": "uid123",
+  "mentorId": "uid456",
+  "message": "Can you review my resume?",
+  "response": "Yes, it looks good",
+  "status": "responded",
+  "createdAt": "2025-01-07",
+  "respondedAt": "2025-01-08"
+}
+```
+##  Reflection
+
+### Why this structure?
+This schema keeps related data separated into clear collections, avoids unnecessary duplication, and supports real-time updates for internships, feedback, and mentor communication.
+
+### How does this help performance?
+Firestore streams only the required documents to each user, so students and mentors receive fast updates without loading unrelated or excessive data.
+
+### Challenges faced
+Choosing between arrays and collections was challenging. Subcollections and top-level collections were selected to improve scalability, keep queries efficient, and reduce Firestore read costs as the app grows.
