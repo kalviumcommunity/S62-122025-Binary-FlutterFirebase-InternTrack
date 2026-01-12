@@ -699,4 +699,77 @@ This exercise demonstrates how Flutter’s development tools enable fast iterati
 
 
 
+## Firebase Authentication Flow (Signup, Login & Logout)
+
+This section extends the existing application by implementing a complete Firebase Authentication flow using **Firebase Auth** in Flutter. The goal of this implementation is to handle user authentication securely and seamlessly, similar to a real-world production app.
+
+---
+
+### Features Implemented
+
+- **User Sign Up**
+  - New users can create an account using email and password.
+  - Implemented using `createUserWithEmailAndPassword()`.
+  - Validations for empty fields, invalid email, and weak passwords.
+  - Errors are displayed using SnackBars.
+
+- **User Login**
+  - Existing users can log in using registered credentials.
+  - Implemented using `signInWithEmailAndPassword()`.
+  - Handles common authentication errors such as:
+    - Wrong password
+    - User not found
+    - Invalid email
+
+- **Authentication State Handling**
+  - The app listens to authentication state changes using:
+    ```dart
+    FirebaseAuth.instance.authStateChanges()
+    ```
+  - Based on the auth state:
+    - Logged-in users are shown the **HomeScreen**
+    - Logged-out users are shown the **AuthScreen**
+  - This ensures automatic navigation without manual routing after login or logout.
+
+- **Logout**
+  - Users can securely log out using:
+    ```dart
+    FirebaseAuth.instance.signOut();
+    ```
+  - On logout, the session is cleared and the app automatically redirects back to the authentication screen.
+
+- **Splash Screen**
+  - A custom animated splash screen is shown on app launch.
+  - After the splash animation, the app transitions to the authentication flow.
+
+---
+
+### End-to-End Flow
+
+1. User launches the app → Splash screen is displayed
+2. App checks authentication state
+3. If user is authenticated → HomeScreen is shown
+4. If user is not authenticated → AuthScreen is shown
+5. User can:
+   - Sign up → redirected automatically to HomeScreen
+   - Log in → redirected automatically to HomeScreen
+   - Log out → redirected automatically to AuthScreen
+
+---
+
+### Key Learning
+
+- `authStateChanges()` simplifies navigation by reacting to real-time authentication updates.
+- No manual navigation is required after login or logout.
+- Firebase Authentication securely manages user sessions across app restarts.
+
+---
+
+### Reflection
+
+- **Hardest part:** Managing authentication states without manual navigation.
+- **How StreamBuilder helps:** It rebuilds the UI automatically when auth state changes.
+- **Why logout is important:** It clears the session and prevents unauthorized access.
+
+---
 
