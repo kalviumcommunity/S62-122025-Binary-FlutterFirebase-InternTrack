@@ -757,6 +757,12 @@ This section extends the existing application by implementing a complete Firebas
 
 ---
 
+### Screenshot
+
+**Firebase Console - User Accounts**
+
+![Firebase console showing user accounts](images/firebase_console_users.png)
+
 ### Key Learning
 
 - `authStateChanges()` simplifies navigation by reacting to real-time authentication updates.
