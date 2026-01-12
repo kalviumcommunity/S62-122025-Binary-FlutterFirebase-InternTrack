@@ -1,23 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:s62_122025_binary_flutterfirebase_interntrack/firebase_options.dart';
-import 'screens/welcome_screen.dart';
+import 'firebase_options.dart';
+import 'screens/splash_screen.dart';
+import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(InternTrackApp());
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(MyApp());
 }
 
-class InternTrackApp extends StatelessWidget {
-  const InternTrackApp({super.key});
-
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'InternTrack',
+      title: 'InternTrack Auth',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -26,7 +27,6 @@ class InternTrackApp extends StatelessWidget {
           secondary: Color(0xFF5CA0F2),
         ),
         scaffoldBackgroundColor: Color(0xFFF8FAFB),
-        fontFamily: 'Inter',
         useMaterial3: true,
         appBarTheme: AppBarTheme(
           elevation: 0,
@@ -35,7 +35,7 @@ class InternTrackApp extends StatelessWidget {
           foregroundColor: Color(0xFF2C3E50),
         ),
       ),
-      home: AuthWrapper(),
+      home: SplashScreen(),
     );
   }
 }
@@ -45,7 +45,8 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
+      builder: (ctx, snapshot) {
+        // Show loading indicator while checking auth state
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
             backgroundColor: Colors.white,
@@ -72,11 +73,13 @@ class AuthWrapper extends StatelessWidget {
           );
         }
         
-        if (snapshot.hasData && snapshot.data != null) {
+        // If user is logged in → show HomeScreen
+        if (snapshot.hasData) {
           return HomeScreen();
         }
         
-        return WelcomeScreen();
+        // If no user → show AuthScreen
+        return AuthScreen();
       },
     );
   }

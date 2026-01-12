@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthScreen extends StatefulWidget {
-  final bool isStudent;
-
-  const AuthScreen({Key? key, this.isStudent = true}) : super(key: key);
+  const AuthScreen({Key? key}) : super(key: key);
 
   @override
   _AuthScreenState createState() => _AuthScreenState();
@@ -37,23 +35,26 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       if (isLogin) {
+        // Sign in existing user
         await _auth.signInWithEmailAndPassword(
           email: email,
           password: password,
         );
       } else {
+        // Create new user account
         await _auth.createUserWithEmailAndPassword(
           email: email,
           password: password,
         );
       }
 
+      // Show success message
+      // No manual navigation needed - StreamBuilder handles it automatically
       if (mounted) {
         _showSnackBar(
           isLogin ? 'Login Successful!' : 'Account Created Successfully!',
           isError: false,
         );
-        Navigator.of(context).pop();
       }
     } on FirebaseAuthException catch (e) {
       String errorMessage;
@@ -120,10 +121,7 @@ class _AuthScreenState extends State<AuthScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: Color(0xFF2C3E50)),
-          onPressed: () => Navigator.pop(context),
-        ),
+        // No back button - user cannot go back from auth screen
       ),
       body: SafeArea(
         child: Center(
