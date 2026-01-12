@@ -66,6 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
       try {
         await FirebaseAuth.instance.signOut();
         
+        // Success message - navigation handled automatically by StreamBuilder
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -148,6 +149,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: Column(
                   children: [
+                    // Success Icon
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF4A90E2), Color(0xFF357ABD)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.check_circle_outline_rounded,
+                        size: 40,
+                        color: Colors.white,
+                      ),
+                    ),
+
+                    SizedBox(height: 20),
+
                     Text(
                       'Welcome!',
                       style: TextStyle(
