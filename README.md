@@ -638,144 +638,202 @@ Firebase eliminates the need to build and manage a custom authentication backend
 - Managing navigation after login/logout
 - Handling FirebaseAuthException cases cleanly
 
----
-
-#  Hot Reload, Debug Console & DevTools Demo
+#  Firestore Database Design
 
 ## Project Overview
-This demo is part of Sprint-2 and showcases the use of **Flutter Hot Reload**, the **Debug Console**, and **Flutter DevTools** using the InternTrack Flutter application. The goal is to understand how these tools improve development speed, debugging, and UI inspection while building a reactive Flutter app.
 
-The demonstration is performed on the **Welcome Screen**, which allows users to select a role (Student or Mentor) and navigate forward.
-
----
-
-## Steps Performed
-
-### 1. Hot Reload
-- Ran the Flutter app in debug mode using `flutter run`.
-- Modified a text widget on the Welcome Screen.
-- Saved the file to trigger Hot Reload.
-- Observed instant UI updates without restarting the app or losing state.
-
-### 2. Debug Console
-- Added a `debugPrint()` statement to the **Get Started** button.
-- Interacted with the app by clicking the button.
-- Verified runtime log output in the Debug Console.
-
-### 3. Flutter DevTools
-- Opened Flutter DevTools from VS Code while the app was running.
-- Explored the **Widget Inspector** to visualize the widget tree.
-- Inspected UI elements to understand widget hierarchy and structure.
+This document defines the Firestore database structure used to store all application data.
 
 ---
 
-## Screenshots
+##  Why Firestore?
+Cloud Firestore is a real-time NoSQL database provided by Firebase. It allows:
+- Instant syncing of data across devices
+- Offline support
+- Scalable data storage
+- Secure access using Firebase Authentication
 
-### Hot Reload in Action
-![Hot Reload Demo](images/hot_reload.png)
-
-### Debug Console Output
-![Debug Console Output](images/debug_console.png)
-
-### Flutter DevTools – Widget Inspector
-![Flutter DevTools](images/devtools.png)
----
-
-## Reflection
-
-### How does Hot Reload improve productivity?
-Hot Reload allows developers to instantly see UI changes without restarting the app, which significantly speeds up development and UI iteration.
-
-### Why is DevTools useful for debugging and optimization?
-Flutter DevTools provides visual tools like the Widget Inspector and performance graphs, helping developers understand widget structure, detect issues, and optimize app performance.
-
-### How can these tools be used in a team workflow?
-In a team environment, these tools help developers debug faster, maintain consistent UI behavior, quickly review changes, and collaborate efficiently without repeated app restarts.
+It is ideal for InternTrack because:
+- Internship updates need to sync instantly
+- Mentor feedback should appear in real time
+- Students and mentors need role-based access
 
 ---
 
-## Conclusion
-This exercise demonstrates how Flutter’s development tools enable fast iteration, effective debugging, and better understanding of the reactive UI model, making them essential for building scalable applications like InternTrack.
+##  Data Requirements
 
+The InternTrack app needs to store:
 
-
-## Firebase Authentication Flow (Signup, Login & Logout)
-
-This section extends the existing application by implementing a complete Firebase Authentication flow using **Firebase Auth** in Flutter. The goal of this implementation is to handle user authentication securely and seamlessly, similar to a real-world production app.
-
----
-
-### Features Implemented
-
-- **User Sign Up**
-  - New users can create an account using email and password.
-  - Implemented using `createUserWithEmailAndPassword()`.
-  - Validations for empty fields, invalid email, and weak passwords.
-  - Errors are displayed using SnackBars.
-
-- **User Login**
-  - Existing users can log in using registered credentials.
-  - Implemented using `signInWithEmailAndPassword()`.
-  - Handles common authentication errors such as:
-    - Wrong password
-    - User not found
-    - Invalid email
-
-- **Authentication State Handling**
-  - The app listens to authentication state changes using:
-    ```dart
-    FirebaseAuth.instance.authStateChanges()
-    ```
-  - Based on the auth state:
-    - Logged-in users are shown the **HomeScreen**
-    - Logged-out users are shown the **AuthScreen**
-  - This ensures automatic navigation without manual routing after login or logout.
-
-- **Logout**
-  - Users can securely log out using:
-    ```dart
-    FirebaseAuth.instance.signOut();
-    ```
-  - On logout, the session is cleared and the app automatically redirects back to the authentication screen.
-
-- **Splash Screen**
-  - A custom animated splash screen is shown on app launch.
-  - After the splash animation, the app transitions to the authentication flow.
+- Users (students and mentors)
+- User profiles
+- Internship applications
+- Mentor-student relationships
+- Feedback messages
+- Help requests
+- Uploaded resumes
 
 ---
 
-### End-to-End Flow
+##  Firestore Collections
 
-1. User launches the app → Splash screen is displayed
-2. App checks authentication state
-3. If user is authenticated → HomeScreen is shown
-4. If user is not authenticated → AuthScreen is shown
-5. User can:
-   - Sign up → redirected automatically to HomeScreen
-   - Log in → redirected automatically to HomeScreen
-   - Log out → redirected automatically to AuthScreen
+The database uses these top-level collections:
 
----
-
-### Screenshot
-
-**Firebase Console - User Accounts**
-
-![Firebase console showing user accounts](images/firebase_console_users.png)
-
-### Key Learning
-
-- `authStateChanges()` simplifies navigation by reacting to real-time authentication updates.
-- No manual navigation is required after login or logout.
-- Firebase Authentication securely manages user sessions across app restarts.
+- `users`
+- `internships`
+- `mentorships`
+- `feedbacks`
+- `helpRequests`
+- `resumes`
 
 ---
 
-### Reflection
+## 📁Firestore Schema
 
-- **Hardest part:** Managing authentication states without manual navigation.
-- **How StreamBuilder helps:** It rebuilds the UI automatically when auth state changes.
-- **Why logout is important:** It clears the session and prevents unauthorized access.
+---
+
+## 1. `users`
+Stores both students and mentors.
+
+**Path**: `users/{userId}`
+
+| Field | Type | Description |
+|------|------|------------|
+| name | string | Full name |
+| email | string | Login email |
+| role | string | `"student"` or `"mentor"` |
+| createdAt | timestamp | Account creation time |
+
+**Sample Document**
+```json
+{
+  "name": "Asha",
+  "email": "asha@gmail.com",
+  "role": "student",
+  "createdAt": "2025-01-08T10:20:00Z"
+}
+```
+
+## 2️.  **internships**
+
+Each student can have multiple internship applications.
+
+### Path
+`internships/{internshipId}`
+
+### Fields
+| Field | Type | Description | Required |
+|-------|------|-------------|----------|
+| `studentId` | string | Reference to users | ✅ |
+| `companyName` | string | Company name | ✅ |
+| `position` | string | Job title | ✅ |
+| `status` | string | `applied` / `interview` / `offer` / `rejected` | ✅ |
+| `appliedDate` | timestamp | Date applied | ✅ |
+| `deadline` | timestamp | Optional deadline | ❌ |
+| `notes` | string | Optional notes | ❌ |
+| `createdAt` | timestamp | Creation time | ✅ |
+
+### Sample Document
+```json
+{
+  "studentId": "uid123",
+  "companyName": "Google",
+  "position": "Software Intern",
+  "status": "applied",
+  "appliedDate": "2025-01-05",
+  "deadline": "2025-01-20",
+  "notes": "Referred by alumni",
+  "createdAt": "2025-01-05"
+}
+```
+## 3. Mentorships Collection
+
+This collection links **students** with **mentors**.
+
+---
+
+###  Path: `mentorships/{mentorshipId}`
+
+
+---
+
+###  Fields
+
+| Field     | Type      | Description        | Required |
+|-----------|-----------|--------------------|----------|
+| studentId | string    | Student user ID    | ✅ |
+| mentorId  | string    | Mentor user ID     | ✅ |
+| status    | string    | `pending` / `active` | ✅ |
+| createdAt | timestamp | Creation time      | ✅ |
+
+---
+
+### 📄 Sample Document
+
+```json
+{
+  "studentId": "uid123",
+  "mentorId": "uid456",
+  "status": "active",
+  "createdAt": "2025-01-06"
+}
+
+```
+## 4.  Feedbacks Collection
+
+Mentors give feedback to students about their internships and progress.
+
+---
+
+###  Path: `feedbacks/{feedbackId}`
+
+---
+
+### 📋 Fields
+
+| Field         | Type      | Description |
+|---------------|-----------|-------------|
+| studentId     | string    | Student user ID |
+| mentorId      | string    | Mentor user ID |
+| internshipId  | string    | Related internship ID (optional) |
+| message       | string    | Feedback message |
+| createdAt     | timestamp | When the feedback was created |
+| isRead        | boolean   | Whether the student has read the feedback |
+
+---
+
+### 📄 Sample Document
+
+```json
+{
+  "studentId": "uid123",
+  "mentorId": "uid456",
+  "internshipId": "internship789",
+  "message": "Your resume looks strong. Improve project section.",
+  "createdAt": "2025-01-07",
+  "isRead": false
+}
+
+```
+## 5.  Help Requests Collection
+
+Students ask mentors for guidance and support.
+
+--- 
+###  Path   : `helpRequests/{requestId}`
+
+---
+
+### 📋 Fields
+
+| Field        | Type      | Description |
+|--------------|-----------|-------------|
+| studentId    | string    | Student user ID |
+| mentorId     | string    | Mentor user ID |
+| message      | string    | Help request message |
+| response     | string    | Mentor’s reply |
+| status       | string    | `pending` or `responded` |
+| createdAt    | timestamp | When the request was created |
+| respondedAt  | timestamp | When the mentor responded |
 
 ---
 
