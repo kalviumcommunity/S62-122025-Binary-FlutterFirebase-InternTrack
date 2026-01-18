@@ -837,26 +837,83 @@ Students ask mentors for guidance and support.
 
 ---
 
-### 📄 Sample Document
+# UI - Splash Screen, Onboarding & Auth Flow with Animations
 
-```json
-{
-  "studentId": "uid123",
-  "mentorId": "uid456",
-  "message": "Can you review my resume?",
-  "response": "Yes, it looks good",
-  "status": "responded",
-  "createdAt": "2025-01-07",
-  "respondedAt": "2025-01-08"
-}
-```
-##  Reflection
+## Features Implemented
 
-### Why this structure?
-This schema keeps related data separated into clear collections, avoids unnecessary duplication, and supports real-time updates for internships, feedback, and mentor communication.
+### Authentication System
+- **Email/Password Authentication** with Firebase
+- **User Registration** with display name support
+- **Login/Signup Toggle** with smooth animations
+- **Form Validation** with error handling
+- **Session Management** with Firebase Auth state persistence
 
-### How does this help performance?
-Firestore streams only the required documents to each user, so students and mentors receive fast updates without loading unrelated or excessive data.
+### Onboarding Experience
+- **3-Page Onboarding Flow** showcasing key features:
+  - Centralized Dashboard
+  - Mentor Collaboration
+  - Real-Time Updates
+- **Animated Page Indicators** with gradient effects
+- **Skip Functionality** for returning users
+- **Smooth Page Transitions** with elastic animations
+- **First-Launch Detection** using SharedPreferences
 
-### Challenges faced
-Choosing between arrays and collections was challenging. Subcollections and top-level collections were selected to improve scalability, keep queries efficient, and reduce Firestore read costs as the app grows.
+### Splash Screen
+- **Animated App Logo** with rotation and scale effects
+- **Floating Particles** creating dynamic background
+- **Gradient Orbs** with parallax movement
+- **Loading Indicator** with branded colors
+- **Auto-Navigation** to appropriate screen based on user state
+
+### UI/UX Design
+- **Modern Glassmorphism** with frosted glass effects
+- **Gradient Accents** throughout the interface
+- **Dark/Light Theme Support** with smooth transitions
+- **Animated Backgrounds** with color morphing
+- **Responsive Layouts** for various screen sizes
+- **Smooth Animations** using Flutter's animation system
+
+### Architecture & Code Quality
+- **Reusable Components**:
+  - `AnimatedBackground` - Dynamic gradient backgrounds
+  - `FloatingOrbs` - Animated gradient orbs
+  - `GradientButton` - Custom gradient buttons with loading states
+  - `GlassmorphicContainer` - Frosted glass containers
+  - `CustomTextField` - Styled form inputs
+  - `AppLogo` - Branded logo component
+  - `ThemeToggleButton` - Animated theme switcher
+
+- **Centralized Constants** for consistent spacing, colors, and timing
+- **Provider Pattern** for theme management
+- **Clean Code Structure** with separation of concerns
+
+## Tech Stack
+
+- **SharedPreferences** - Local data persistence
+- **Provider Pattern** - State management
+- **Material Design 3** - Design system
+
+## Screens
+
+1. **Splash Screen** - App initialization with animations
+2. **Onboarding Screen** - First-time user experience
+3. **Auth Screen** - Login and registration
+4. **Home Screen** - Main dashboard (placeholder)
+
+## Design Highlights
+
+- **Color Palette**:
+  - Primary: Black (#0A0A0A) / White (#FFFFFF)
+  - Gradients: Purple (#6B4FBB), Blue (#4A90E2), Pink (#E94B8C), Orange (#FF6B35)
+  
+- **Typography**: 
+  - Display: 36-44px, Extra Bold
+  - Body: 15-17px, Medium
+  - Labels: 14px, Bold
+
+- **Animations**:
+  - Background gradient morphing (8s loop)
+  - Floating orbs with sine/cosine movement
+  - Page transitions with fade and slide
+  - Icon animations with elastic curves
+  - Button hover and loading states

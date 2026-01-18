@@ -1,368 +1,450 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../widgets/theme_toggle_button.dart';
+import '../../widgets/animated_background.dart';
+import '../../widgets/floating_orbs.dart';
+import '../../core/constants/app_constants.dart';
+import 'auth/auth_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _backgroundController;
   final user = FirebaseAuth.instance.currentUser;
-  bool _isLoggingOut = false;
 
-  Future<void> _handleLogout() async {
-    final shouldLogout = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: Text(
-          'Sign Out',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF2C3E50),
-          ),
-        ),
-        content: Text(
-          'Are you sure you want to sign out?',
-          style: TextStyle(
-            color: Color(0xFF7A8A99),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(
-              'Cancel',
-              style: TextStyle(
-                color: Color(0xFF7A8A99),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFFE74C3C),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: Text(
-              'Sign Out',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
-    );
+  @override
+  void initState() {
+    super.initState();
+    _backgroundController = AnimationController(
+      duration: Duration(milliseconds: AppConstants.backgroundAnimationDuration),
+      vsync: this,
+    )..repeat();
+  }
 
-    if (shouldLogout == true && mounted) {
-      setState(() => _isLoggingOut = true);
+  @override
+  void dispose() {
+    _backgroundController.dispose();
+    super.dispose();
+  }
 
-      try {
-        await FirebaseAuth.instance.signOut();
-        
-        // Success message - navigation handled automatically by StreamBuilder
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Signed out successfully'),
-              backgroundColor: Color(0xFF27AE60),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              margin: EdgeInsets.all(16),
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          setState(() => _isLoggingOut = false);
-          
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error signing out: $e'),
-              backgroundColor: Color(0xFFE74C3C),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              margin: EdgeInsets.all(16),
-            ),
-          );
-        }
-      }
+  Future<void> _signOut() async {
+    await FirebaseAuth.instance.signOut();
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => AuthScreen()),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Color(0xFFF8FAFB),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          'Home',
-          style: TextStyle(
-            color: Color(0xFF2C3E50),
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        automaticallyImplyLeading: false,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: IconButton(
-              icon: Icon(Icons.logout_rounded, color: Color(0xFF7A8A99)),
-              tooltip: 'Sign Out',
-              onPressed: _isLoggingOut ? null : _handleLogout,
-            ),
-          ),
-        ],
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Welcome Card
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(28),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color(0xFF4A90E2).withOpacity(0.08),
-                      blurRadius: 20,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
+      body: Stack(
+        children: [
+          AnimatedBackground(controller: _backgroundController, isDark: isDark),
+          FloatingOrbs(controller: _backgroundController, isDark: isDark),
+
+          SafeArea(
+            child: SingleChildScrollView(
+              physics: BouncingScrollPhysics(),
+              child: Padding(
+                padding: EdgeInsets.all(AppConstants.spacingLarge),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Success Icon
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Color(0xFF4A90E2), Color(0xFF357ABD)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                    // Header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Welcome Back,',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Color(0xFF6B6B6B),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(height: AppConstants.spacingXSmall),
+                            ShaderMask(
+                              shaderCallback: (bounds) => LinearGradient(
+                                colors: isDark
+                                    ? [Colors.white, Color(0xFFB8B8B8)]
+                                    : [Colors.black, Color(0xFF4A4A4A)],
+                              ).createShader(bounds),
+                              child: Text(
+                                user?.displayName ?? 'User',
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.check_circle_outline_rounded,
-                        size: 40,
-                        color: Colors.white,
+                        Row(
+                          children: [
+                            ThemeToggleButton(),
+                            SizedBox(width: AppConstants.spacingSmall + 4),
+                            Container(
+                              width: 56,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: isDark
+                                      ? [Color(0xFF6B4FBB), Color(0xFF4A90E2)]
+                                      : [Color(0xFF4A90E2), Color(0xFF6B4FBB)],
+                                ),
+                                borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: (isDark ? Color(0xFF6B4FBB) : Color(0xFF4A90E2))
+                                        .withOpacity(0.3),
+                                    blurRadius: 15,
+                                    offset: Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: IconButton(
+                                icon: Icon(Icons.logout_rounded, color: Colors.white),
+                                onPressed: _signOut,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: AppConstants.spacingXXLarge),
+
+                    // Stats Cards
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            isDark: isDark,
+                            icon: Icons.work_outline_rounded,
+                            title: 'Active',
+                            value: '12',
+                            gradient: [Color(0xFF6B4FBB), Color(0xFF4A90E2)],
+                          ),
+                        ),
+                        SizedBox(width: AppConstants.spacingMedium),
+                        Expanded(
+                          child: _buildStatCard(
+                            isDark: isDark,
+                            icon: Icons.pending_outlined,
+                            title: 'Pending',
+                            value: '5',
+                            gradient: [Color(0xFF4A90E2), Color(0xFFE94B8C)],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: AppConstants.spacingMedium),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            isDark: isDark,
+                            icon: Icons.check_circle_outline_rounded,
+                            title: 'Completed',
+                            value: '8',
+                            gradient: [Color(0xFFE94B8C), Color(0xFFFF6B35)],
+                          ),
+                        ),
+                        SizedBox(width: AppConstants.spacingMedium),
+                        Expanded(
+                          child: _buildStatCard(
+                            isDark: isDark,
+                            icon: Icons.people_outline_rounded,
+                            title: 'Mentors',
+                            value: '3',
+                            gradient: [Color(0xFFFF6B35), Color(0xFF6B4FBB)],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: AppConstants.spacingXXLarge),
+
+                    // Recent Applications Section
+                    Text(
+                      'Recent Applications',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: isDark ? Colors.white : Colors.black,
+                        letterSpacing: -0.5,
                       ),
                     ),
 
                     SizedBox(height: 20),
 
-                    Text(
-                      'Welcome!',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2C3E50),
-                      ),
+                    // Application Cards
+                    _buildApplicationCard(
+                      isDark: isDark,
+                      company: 'Google',
+                      position: 'Software Engineer Intern',
+                      status: 'Interview',
+                      date: 'Applied 2 days ago',
+                      statusColor: Color(0xFF4A90E2),
                     ),
 
-                    SizedBox(height: 8),
+                    SizedBox(height: AppConstants.spacingMedium),
 
-                    Text(
-                      'You are successfully signed in',
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Color(0xFF7A8A99),
-                      ),
+                    _buildApplicationCard(
+                      isDark: isDark,
+                      company: 'Microsoft',
+                      position: 'Product Manager Intern',
+                      status: 'Pending',
+                      date: 'Applied 5 days ago',
+                      statusColor: Color(0xFFFF6B35),
                     ),
 
-                    SizedBox(height: 28),
+                    SizedBox(height: AppConstants.spacingMedium),
 
-                    // User Info
-                    _buildInfoTile(
-                      icon: Icons.person_outline_rounded,
-                      label: 'Email Address',
-                      value: user?.email ?? 'No email',
-                      color: Color(0xFF4A90E2),
+                    _buildApplicationCard(
+                      isDark: isDark,
+                      company: 'Meta',
+                      position: 'Data Science Intern',
+                      status: 'Applied',
+                      date: 'Applied 1 week ago',
+                      statusColor: Color(0xFF6B6B6B),
                     ),
 
-                    SizedBox(height: 16),
+                    SizedBox(height: AppConstants.spacingXXLarge),
 
-                    _buildInfoTile(
-                      icon: Icons.verified_user_outlined,
-                      label: 'Status',
-                      value: user?.emailVerified == true ? 'Verified' : 'Not Verified',
-                      color: user?.emailVerified == true
-                          ? Color(0xFF27AE60)
-                          : Color(0xFFF39C12),
-                    ),
-
-                    SizedBox(height: 16),
-
-                    _buildInfoTile(
-                      icon: Icons.fingerprint_rounded,
-                      label: 'User ID',
-                      value: user?.uid.substring(0, 12) ?? 'N/A',
-                      color: Color(0xFF4A90E2),
-                      isMonospace: true,
-                    ),
-
-                    SizedBox(height: 28),
-
-                    // Sign Out Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 54,
-                      child: ElevatedButton(
-                        onPressed: _isLoggingOut ? null : _handleLogout,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFFE74C3C),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          disabledBackgroundColor: Color(0xFFE74C3C).withOpacity(0.6),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: _isLoggingOut
-                            ? SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2.5,
-                                ),
-                              )
-                            : Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.logout_rounded, size: 20),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Sign Out',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              SizedBox(height: 24),
-
-              // Info Card
-              Container(
-                padding: EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Color(0xFFE8EDF2)),
-                ),
-                child: Row(
-                  children: [
+                    // Quick Actions
                     Container(
-                      width: 48,
-                      height: 48,
+                      width: double.infinity,
+                      padding: EdgeInsets.all(28),
                       decoration: BoxDecoration(
-                        color: Color(0xFF4A90E2).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.info_outline_rounded,
-                        color: Color(0xFF4A90E2),
-                        size: 24,
-                      ),
-                    ),
-                    SizedBox(width: 16),
-                    Expanded(
-                      child: Text(
-                        'Your session is securely managed by Firebase Authentication',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF7A8A99),
-                          height: 1.4,
+                        gradient: LinearGradient(
+                          colors: isDark
+                              ? [Color(0xFF6B4FBB), Color(0xFF4A90E2)]
+                              : [Color(0xFF4A90E2), Color(0xFF6B4FBB)],
                         ),
+                        borderRadius: BorderRadius.circular(AppConstants.borderRadiusLarge),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (isDark ? Color(0xFF6B4FBB) : Color(0xFF4A90E2))
+                                .withOpacity(0.4),
+                            blurRadius: 30,
+                            offset: Offset(0, 15),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.add_circle_outline_rounded,
+                            color: Colors.white,
+                            size: 40,
+                          ),
+                          SizedBox(height: AppConstants.spacingMedium),
+                          Text(
+                            'Add New Application',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          SizedBox(height: AppConstants.spacingSmall),
+                          Text(
+                            'Track your latest internship opportunity',
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.white.withOpacity(0.8),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+
+                    SizedBox(height: AppConstants.spacingLarge),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildInfoTile({
+  Widget _buildStatCard({
+    required bool isDark,
     required IconData icon,
-    required String label,
+    required String title,
     required String value,
-    required Color color,
-    bool isMonospace = false,
+    required List<Color> gradient,
   }) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFB),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE8EDF2)),
+        color: isDark
+            ? Colors.white.withOpacity(0.05)
+            : Colors.white.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withOpacity(0.1)
+              : Colors.black.withOpacity(0.08),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.2)
+                : Colors.black.withOpacity(0.04),
+            blurRadius: 15,
+            offset: Offset(0, 5),
+          ),
+        ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 40,
-            height: 40,
+            padding: EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
+              gradient: LinearGradient(colors: gradient),
+              borderRadius: BorderRadius.circular(AppConstants.borderRadiusSmall),
             ),
-            child: Icon(icon, color: color, size: 20),
+            child: Icon(icon, color: Colors.white, size: 24),
           ),
-          SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
+          SizedBox(height: AppConstants.spacingMedium),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              color: isDark ? Colors.white : Colors.black,
+              letterSpacing: -0.5,
+            ),
+          ),
+          SizedBox(height: AppConstants.spacingXSmall),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 14,
+              color: Color(0xFF6B6B6B),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildApplicationCard({
+    required bool isDark,
+    required String company,
+    required String position,
+    required String status,
+    required String date,
+    required Color statusColor,
+  }) {
+    return Container(
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withOpacity(0.05)
+            : Colors.white.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withOpacity(0.1)
+              : Colors.black.withOpacity(0.08),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.2)
+                : Colors.black.withOpacity(0.04),
+            blurRadius: 15,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                company,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: isDark ? Colors.white : Colors.black,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(AppConstants.spacingSmall),
+                  border: Border.all(
+                    color: statusColor,
+                    width: 1.5,
+                  ),
+                ),
+                child: Text(
+                  status,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Color(0xFF7A8A99),
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w700,
+                    color: statusColor,
                   ),
                 ),
-                SizedBox(height: 4),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF2C3E50),
-                    fontFamily: isMonospace ? 'monospace' : null,
-                  ),
-                ),
-              ],
+              ),
+            ],
+          ),
+          SizedBox(height: AppConstants.spacingSmall),
+          Text(
+            position,
+            style: TextStyle(
+              fontSize: 15,
+              color: Color(0xFF6B6B6B),
+              fontWeight: FontWeight.w600,
             ),
+          ),
+          SizedBox(height: AppConstants.spacingSmall + 4),
+          Row(
+            children: [
+              Icon(
+                Icons.schedule_rounded,
+                size: 16,
+                color: Color(0xFF6B6B6B),
+              ),
+              SizedBox(width: 6),
+              Text(
+                date,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF6B6B6B),
+                ),
+              ),
+            ],
           ),
         ],
       ),
