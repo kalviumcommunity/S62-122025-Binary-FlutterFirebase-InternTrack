@@ -1,7 +1,7 @@
 class AppConstants {
   // App Info
   static const String appName = 'InternTrack';
-  static const String appTagline = 'Elite Career Management';
+  static const String appTagline = 'Your career journey, organized';
   
   // Timing
   static const int splashDuration = 2500;
