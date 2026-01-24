@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../widgets/theme_toggle_button.dart';
-import '../../widgets/animated_background.dart';
-import '../../widgets/floating_orbs.dart';
-import '../../core/constants/app_constants.dart';
+import '../widgets/theme_toggle.dart';
+import '../widgets/gradient_orb.dart';
+import '../widgets/glass_container.dart';
+import '../core/constants/app_constants.dart';
+import '../core/theme/app_theme.dart';
 import 'auth/auth_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -11,24 +13,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _backgroundController;
+class _HomeScreenState extends State<HomeScreen> {
   final user = FirebaseAuth.instance.currentUser;
-
-  @override
-  void initState() {
-    super.initState();
-    _backgroundController = AnimationController(
-      duration: Duration(milliseconds: AppConstants.backgroundAnimationDuration),
-      vsync: this,
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _backgroundController.dispose();
-    super.dispose();
-  }
 
   Future<void> _signOut() async {
     await FirebaseAuth.instance.signOut();
@@ -44,16 +30,36 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          AnimatedBackground(controller: _backgroundController, isDark: isDark),
-          FloatingOrbs(controller: _backgroundController, isDark: isDark),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [AppTheme.pureBlack, AppTheme.darkGray, AppTheme.pureBlack]
+                : [AppTheme.pureWhite, AppTheme.lightGray, AppTheme.pureWhite],
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Gradient orbs
+            GradientOrb(
+              size: 400,
+              alignment: Alignment.topRight,
+              colors: [AppTheme.purplePrimary, Colors.transparent],
+              opacity: 0.3,
+            ),
+            GradientOrb(
+              size: 350,
+              alignment: Alignment.bottomLeft,
+              colors: [AppTheme.purpleLight, Colors.transparent],
+              opacity: 0.25,
+            ),
 
-          SafeArea(
-            child: SingleChildScrollView(
-              physics: BouncingScrollPhysics(),
-              child: Padding(
-                padding: EdgeInsets.all(AppConstants.spacingLarge),
+            SafeArea(
+              child: SingleChildScrollView(
+                physics: BouncingScrollPhysics(),
+                padding: EdgeInsets.all(AppConstants.spaceL),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -61,62 +67,56 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Welcome Back,',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Color(0xFF6B6B6B),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            SizedBox(height: AppConstants.spacingXSmall),
-                            ShaderMask(
-                              shaderCallback: (bounds) => LinearGradient(
-                                colors: isDark
-                                    ? [Colors.white, Color(0xFFB8B8B8)]
-                                    : [Colors.black, Color(0xFF4A4A4A)],
-                              ).createShader(bounds),
-                              child: Text(
-                                user?.displayName ?? 'User',
+                        Flexible(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Welcome back,',
                                 style: TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
-                                  letterSpacing: -0.5,
+                                  fontSize: 16,
+                                  color: AppTheme.mediumGray,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
-                            ),
-                          ],
+                              SizedBox(height: AppConstants.spaceXS),
+                              Text(
+                                user?.displayName ?? 'User',
+                                style: Theme.of(context).textTheme.displayMedium,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
                         ),
                         Row(
                           children: [
-                            ThemeToggleButton(),
-                            SizedBox(width: AppConstants.spacingSmall + 4),
-                            Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: isDark
-                                      ? [Color(0xFF6B4FBB), Color(0xFF4A90E2)]
-                                      : [Color(0xFF4A90E2), Color(0xFF6B4FBB)],
-                                ),
-                                borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: (isDark ? Color(0xFF6B4FBB) : Color(0xFF4A90E2))
-                                        .withOpacity(0.3),
-                                    blurRadius: 15,
-                                    offset: Offset(0, 5),
+                            ThemeToggle(),
+                            SizedBox(width: AppConstants.spaceS),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                child: Container(
+                                  width: 56,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [AppTheme.purplePrimary, AppTheme.purpleLight],
+                                    ),
+                                    borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppTheme.purplePrimary.withOpacity(0.4),
+                                        blurRadius: 15,
+                                        offset: Offset(0, 5),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                              child: IconButton(
-                                icon: Icon(Icons.logout_rounded, color: Colors.white),
-                                onPressed: _signOut,
+                                  child: IconButton(
+                                    icon: Icon(Icons.logout_rounded, color: Colors.white),
+                                    onPressed: _signOut,
+                                  ),
+                                ),
                               ),
                             ),
                           ],
@@ -124,85 +124,72 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ],
                     ),
 
-                    SizedBox(height: AppConstants.spacingXXLarge),
+                    SizedBox(height: AppConstants.spaceXXL),
 
-                    // Stats Cards
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildStatCard(
-                            isDark: isDark,
-                            icon: Icons.work_outline_rounded,
-                            title: 'Active',
-                            value: '12',
-                            gradient: [Color(0xFF6B4FBB), Color(0xFF4A90E2)],
-                          ),
-                        ),
-                        SizedBox(width: AppConstants.spacingMedium),
-                        Expanded(
-                          child: _buildStatCard(
-                            isDark: isDark,
-                            icon: Icons.pending_outlined,
-                            title: 'Pending',
-                            value: '5',
-                            gradient: [Color(0xFF4A90E2), Color(0xFFE94B8C)],
-                          ),
-                        ),
-                      ],
+                    // Stats Grid
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        return GridView.count(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          crossAxisCount: 2,
+                          mainAxisSpacing: AppConstants.spaceM,
+                          crossAxisSpacing: AppConstants.spaceM,
+                          childAspectRatio: 1.1,
+                          children: [
+                            _buildStatCard(
+                              isDark: isDark,
+                              icon: Icons.work_outline_rounded,
+                              title: 'Active',
+                              value: '12',
+                              gradient: [AppTheme.purplePrimary, AppTheme.purpleLight],
+                            ),
+                            _buildStatCard(
+                              isDark: isDark,
+                              icon: Icons.pending_outlined,
+                              title: 'Pending',
+                              value: '5',
+                              gradient: [AppTheme.purpleLight, AppTheme.purpleDark],
+                            ),
+                            _buildStatCard(
+                              isDark: isDark,
+                              icon: Icons.check_circle_outline_rounded,
+                              title: 'Completed',
+                              value: '8',
+                              gradient: [AppTheme.purpleDark, AppTheme.purplePrimary],
+                            ),
+                            _buildStatCard(
+                              isDark: isDark,
+                              icon: Icons.people_outline_rounded,
+                              title: 'Mentors',
+                              value: '3',
+                              gradient: [AppTheme.purplePrimary, AppTheme.purpleDark],
+                            ),
+                          ],
+                        );
+                      },
                     ),
 
-                    SizedBox(height: AppConstants.spacingMedium),
+                    SizedBox(height: AppConstants.spaceXXL),
 
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildStatCard(
-                            isDark: isDark,
-                            icon: Icons.check_circle_outline_rounded,
-                            title: 'Completed',
-                            value: '8',
-                            gradient: [Color(0xFFE94B8C), Color(0xFFFF6B35)],
-                          ),
-                        ),
-                        SizedBox(width: AppConstants.spacingMedium),
-                        Expanded(
-                          child: _buildStatCard(
-                            isDark: isDark,
-                            icon: Icons.people_outline_rounded,
-                            title: 'Mentors',
-                            value: '3',
-                            gradient: [Color(0xFFFF6B35), Color(0xFF6B4FBB)],
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: AppConstants.spacingXXLarge),
-
-                    // Recent Applications Section
+                    // Section title
                     Text(
                       'Recent Applications',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        color: isDark ? Colors.white : Colors.black,
-                        letterSpacing: -0.5,
-                      ),
+                      style: Theme.of(context).textTheme.headlineSmall,
                     ),
 
-                    SizedBox(height: 20),
+                    SizedBox(height: AppConstants.spaceL),
 
-                    // Application Cards
+                    // Applications
                     _buildApplicationCard(
                       isDark: isDark,
                       company: 'Google',
                       position: 'Software Engineer Intern',
                       status: 'Interview',
                       date: 'Applied 2 days ago',
-                      statusColor: Color(0xFF4A90E2),
                     ),
 
-                    SizedBox(height: AppConstants.spacingMedium),
+                    SizedBox(height: AppConstants.spaceM),
 
                     _buildApplicationCard(
                       isDark: isDark,
@@ -210,10 +197,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       position: 'Product Manager Intern',
                       status: 'Pending',
                       date: 'Applied 5 days ago',
-                      statusColor: Color(0xFFFF6B35),
                     ),
 
-                    SizedBox(height: AppConstants.spacingMedium),
+                    SizedBox(height: AppConstants.spaceM),
 
                     _buildApplicationCard(
                       isDark: isDark,
@@ -221,68 +207,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       position: 'Data Science Intern',
                       status: 'Applied',
                       date: 'Applied 1 week ago',
-                      statusColor: Color(0xFF6B6B6B),
                     ),
-
-                    SizedBox(height: AppConstants.spacingXXLarge),
-
-                    // Quick Actions
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(28),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: isDark
-                              ? [Color(0xFF6B4FBB), Color(0xFF4A90E2)]
-                              : [Color(0xFF4A90E2), Color(0xFF6B4FBB)],
-                        ),
-                        borderRadius: BorderRadius.circular(AppConstants.borderRadiusLarge),
-                        boxShadow: [
-                          BoxShadow(
-                            color: (isDark ? Color(0xFF6B4FBB) : Color(0xFF4A90E2))
-                                .withOpacity(0.4),
-                            blurRadius: 30,
-                            offset: Offset(0, 15),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.add_circle_outline_rounded,
-                            color: Colors.white,
-                            size: 40,
-                          ),
-                          SizedBox(height: AppConstants.spacingMedium),
-                          Text(
-                            'Add New Application',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          SizedBox(height: AppConstants.spacingSmall),
-                          Text(
-                            'Track your latest internship opportunity',
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: Colors.white.withOpacity(0.8),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    SizedBox(height: AppConstants.spacingLarge),
                   ],
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -294,57 +225,52 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     required String value,
     required List<Color> gradient,
   }) {
-    return Container(
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withOpacity(0.05)
-            : Colors.white.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withOpacity(0.1)
-              : Colors.black.withOpacity(0.08),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withOpacity(0.2)
-                : Colors.black.withOpacity(0.04),
-            blurRadius: 15,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
+    return GlassContainer(
+      isDark: isDark,
+      padding: EdgeInsets.all(AppConstants.spaceM),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Container(
             padding: EdgeInsets.all(10),
             decoration: BoxDecoration(
               gradient: LinearGradient(colors: gradient),
-              borderRadius: BorderRadius.circular(AppConstants.borderRadiusSmall),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: Colors.white, size: 24),
+            child: Icon(icon, color: Colors.white, size: 20),
           ),
-          SizedBox(height: AppConstants.spacingMedium),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-              color: isDark ? Colors.white : Colors.black,
-              letterSpacing: -0.5,
-            ),
-          ),
-          SizedBox(height: AppConstants.spacingXSmall),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              color: Color(0xFF6B6B6B),
-              fontWeight: FontWeight.w600,
+          SizedBox(height: 4),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? AppTheme.pureWhite : AppTheme.pureBlack,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 2),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.mediumGray,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -358,90 +284,103 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     required String position,
     required String status,
     required String date,
-    required Color statusColor,
   }) {
-    return Container(
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withOpacity(0.05)
-            : Colors.white.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withOpacity(0.1)
-              : Colors.black.withOpacity(0.08),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withOpacity(0.2)
-                : Colors.black.withOpacity(0.04),
-            blurRadius: 15,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
+    return GlassContainer(
+      isDark: isDark,
+      padding: EdgeInsets.all(AppConstants.spaceL),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                company,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  color: isDark ? Colors.white : Colors.black,
-                  letterSpacing: -0.3,
+              Flexible(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [AppTheme.purplePrimary, AppTheme.purpleLight],
+                        ),
+                        borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
+                      ),
+                      child: Icon(
+                        Icons.work_outline_rounded,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    SizedBox(width: AppConstants.spaceM),
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            company,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: isDark ? AppTheme.pureWhite : AppTheme.pureBlack,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            position,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppTheme.mediumGray,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              SizedBox(width: 8),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(AppConstants.spacingSmall),
+                  color: AppTheme.purplePrimary.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: statusColor,
+                    color: AppTheme.purplePrimary.withOpacity(0.5),
                     width: 1.5,
                   ),
                 ),
                 child: Text(
                   status,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: statusColor,
+                    color: AppTheme.purplePrimary,
                   ),
                 ),
               ),
             ],
           ),
-          SizedBox(height: AppConstants.spacingSmall),
-          Text(
-            position,
-            style: TextStyle(
-              fontSize: 15,
-              color: Color(0xFF6B6B6B),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          SizedBox(height: AppConstants.spacingSmall + 4),
+          SizedBox(height: AppConstants.spaceM),
           Row(
             children: [
               Icon(
                 Icons.schedule_rounded,
                 size: 16,
-                color: Color(0xFF6B6B6B),
+                color: AppTheme.mediumGray,
               ),
               SizedBox(width: 6),
               Text(
                 date,
                 style: TextStyle(
                   fontSize: 13,
-                  color: Color(0xFF6B6B6B),
+                  color: AppTheme.mediumGray,
                 ),
               ),
             ],

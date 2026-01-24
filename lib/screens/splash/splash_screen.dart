@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import '../../main.dart';
+import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../widgets/animated_background.dart';
+import '../../main.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/theme/app_theme.dart';
+import '../../widgets/gradient_orb.dart';
 import '../onboarding/onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -11,61 +13,29 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
-  late AnimationController _fadeController;
-  late AnimationController _scaleController;
-  late AnimationController _rotateController;
-  late AnimationController _particleController;
-  late AnimationController _backgroundController;
-  
+class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
-  late Animation<double> _rotateAnimation;
 
   @override
   void initState() {
     super.initState();
     
-    _backgroundController = AnimationController(
-      duration: Duration(milliseconds: AppConstants.backgroundAnimationDuration),
-      vsync: this,
-    )..repeat();
-
-    _fadeController = AnimationController(
-      duration: Duration(milliseconds: 1200),
-      vsync: this,
-    );
-
-    _scaleController = AnimationController(
+    _controller = AnimationController(
       duration: Duration(milliseconds: 1500),
       vsync: this,
     );
 
-    _rotateController = AnimationController(
-      duration: Duration(milliseconds: 2000),
-      vsync: this,
-    );
-
-    _particleController = AnimationController(
-      duration: Duration(milliseconds: AppConstants.particleAnimationDuration),
-      vsync: this,
-    )..repeat();
-
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
     );
 
-    _rotateAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _rotateController, curve: Curves.easeInOut),
-    );
-
-    _fadeController.forward();
-    _scaleController.forward();
-    _rotateController.forward();
+    _controller.forward();
 
     Timer(Duration(milliseconds: AppConstants.splashDuration), () async {
       final prefs = await SharedPreferences.getInstance();
@@ -78,13 +48,11 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                 hasSeenOnboarding ? AuthWrapper() : OnboardingScreen(),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
               return FadeTransition(
-                opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
-                  CurvedAnimation(parent: animation, curve: Curves.easeInOut),
-                ),
+                opacity: animation,
                 child: child,
               );
             },
-            transitionDuration: Duration(milliseconds: 1000),
+            transitionDuration: Duration(milliseconds: 800),
           ),
         );
       }
@@ -93,261 +61,139 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
   @override
   void dispose() {
-    _fadeController.dispose();
-    _scaleController.dispose();
-    _rotateController.dispose();
-    _particleController.dispose();
-    _backgroundController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          AnimatedBackground(controller: _backgroundController, isDark: isDark),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [AppTheme.pureBlack, AppTheme.darkGray, AppTheme.pureBlack]
+                : [AppTheme.pureWhite, AppTheme.lightGray, AppTheme.pureWhite],
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Gradient orbs
+            GradientOrb(
+              size: 400,
+              alignment: Alignment.topRight,
+              colors: [AppTheme.purplePrimary, Colors.transparent],
+              opacity: 0.3,
+            ),
+            GradientOrb(
+              size: 350,
+              alignment: Alignment.bottomLeft,
+              colors: [AppTheme.purpleLight, Colors.transparent],
+              opacity: 0.25,
+            ),
 
-          // Floating particles
-          ...List.generate(12, (index) {
-            return AnimatedBuilder(
-              animation: _particleController,
-              builder: (context, child) {
-                final offset = (_particleController.value + (index * 0.1)) % 1.0;
-                final x = size.width * (0.1 + (index % 4) * 0.25);
-                final y = size.height * offset;
-                
-                return Positioned(
-                  left: x,
-                  top: y,
-                  child: Opacity(
-                    opacity: (0.3 - (offset * 0.3)).clamp(0.0, 1.0),
-                    child: Container(
-                      width: 4 + (index % 3) * 2,
-                      height: 4 + (index % 3) * 2,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: isDark
-                              ? [Colors.white, Colors.white.withOpacity(0)]
-                              : [Colors.black26, Colors.transparent],
+            // Content
+            Center(
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Logo
+                      Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [AppTheme.purplePrimary, AppTheme.purpleLight],
+                          ),
+                          borderRadius: BorderRadius.circular(AppConstants.radiusXLarge),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.purplePrimary.withOpacity(0.6),
+                              blurRadius: 40,
+                              offset: Offset(0, 20),
+                              spreadRadius: 5,
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.work_outline_rounded,
+                          size: 60,
+                          color: Colors.white,
                         ),
                       ),
-                    ),
-                  ),
-                );
-              },
-            );
-          }),
 
-          // Glassmorphic circles
-          Positioned(
-            top: -150,
-            right: -100,
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: Container(
-                width: AppConstants.orbSizeLarge,
-                height: AppConstants.orbSizeLarge,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: isDark
-                        ? [
-                            Color(0xFF6B4FBB).withOpacity(0.15),
-                            Color(0xFF4A90E2).withOpacity(0.05),
-                            Colors.transparent,
-                          ]
-                        : [
-                            Color(0xFF4A90E2).withOpacity(0.1),
-                            Color(0xFF6B4FBB).withOpacity(0.05),
-                            Colors.transparent,
-                          ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+                      SizedBox(height: AppConstants.spaceXXL),
 
-          Positioned(
-            bottom: -200,
-            left: -150,
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: Container(
-                width: 450,
-                height: 450,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: isDark
-                        ? [
-                            Color(0xFFE94B8C).withOpacity(0.12),
-                            Color(0xFFFF6B35).withOpacity(0.06),
-                            Colors.transparent,
-                          ]
-                        : [
-                            Color(0xFFFF6B35).withOpacity(0.08),
-                            Color(0xFFE94B8C).withOpacity(0.04),
-                            Colors.transparent,
-                          ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+                      // App Name
+                      Text(
+                        AppConstants.appName,
+                        style: Theme.of(context).textTheme.displayLarge,
+                      ),
 
-          // Main content
-          Center(
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ScaleTransition(
-                    scale: _scaleAnimation,
-                    child: AnimatedBuilder(
-                      animation: _rotateController,
-                      builder: (context, child) {
-                        return Transform.rotate(
-                          angle: _rotateAnimation.value * 0.1,
+                      SizedBox(height: AppConstants.spaceM),
+
+                      // Tagline
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                           child: Container(
-                            width: AppConstants.logoSize,
-                            height: AppConstants.logoSize,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(AppConstants.borderRadiusXLarge),
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: isDark
-                                    ? [Color(0xFF6B4FBB), Color(0xFF4A90E2)]
-                                    : [Color(0xFF4A90E2), Color(0xFF6B4FBB)],
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: (isDark ? Color(0xFF6B4FBB) : Color(0xFF4A90E2))
-                                      .withOpacity(0.5),
-                                  blurRadius: 40,
-                                  offset: Offset(0, 20),
-                                  spreadRadius: 5,
-                                ),
-                              ],
+                            padding: EdgeInsets.symmetric(
+                              horizontal: AppConstants.spaceL,
+                              vertical: AppConstants.spaceS + 2,
                             ),
-                            child: Stack(
-                              children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(AppConstants.borderRadiusXLarge),
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                        Colors.white.withOpacity(0.2),
-                                        Colors.white.withOpacity(0.05),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                Center(
-                                  child: Icon(
-                                    Icons.rocket_launch_rounded,
-                                    size: 60,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? Colors.white.withOpacity(0.1)
+                                  : Colors.black.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+                              border: Border.all(
+                                color: isDark
+                                    ? Colors.white.withOpacity(0.2)
+                                    : Colors.black.withOpacity(0.1),
+                              ),
+                            ),
+                            child: Text(
+                              AppConstants.appTagline,
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: AppTheme.mediumGray,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 0.5,
+                              ),
                             ),
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                  
-                  SizedBox(height: AppConstants.spacingXXLarge),
-
-                  ShaderMask(
-                    shaderCallback: (bounds) => LinearGradient(
-                      colors: isDark
-                          ? [Colors.white, Color(0xFFB8B8B8)]
-                          : [Colors.black, Color(0xFF4A4A4A)],
-                    ).createShader(bounds),
-                    child: Text(
-                      AppConstants.appName,
-                      style: TextStyle(
-                        fontSize: 42,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: -1.5,
+                        ),
                       ),
-                    ),
-                  ),
 
-                  SizedBox(height: 12),
+                      SizedBox(height: AppConstants.spaceXXL + AppConstants.spaceL),
 
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: AppConstants.spacingLarge, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.05)
-                          : Colors.black.withOpacity(0.03),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isDark
-                            ? Colors.white.withOpacity(0.1)
-                            : Colors.black.withOpacity(0.05),
+                      // Loading indicator
+                      SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 3,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppTheme.purplePrimary,
+                          ),
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      AppConstants.appTagline,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Color(0xFF6B6B6B),
-                        letterSpacing: 0.8,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-          ),
-
-          // Animated loading indicator
-          Positioned(
-            bottom: 100,
-            left: 0,
-            right: 0,
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: Column(
-                children: [
-                  SizedBox(
-                    width: 50,
-                    height: 50,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        isDark ? Color(0xFF6B4FBB) : Color(0xFF4A90E2),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  Text(
-                    'Loading your experience...',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF6B6B6B),
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

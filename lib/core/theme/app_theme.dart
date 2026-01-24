@@ -1,151 +1,104 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Enhanced Color Palette
-  static const Color primaryBlack = Color(0xFF0A0A0A);
-  static const Color primaryWhite = Color(0xFFFFFFFF);
-  static const Color accentGray = Color(0xFF1A1A1A);
-  static const Color lightGray = Color(0xFFF5F5F5);
-  static const Color mediumGray = Color(0xFF6B6B6B);
-  static const Color darkGray = Color(0xFF2A2A2A);
+  // Pure Black & White with Purple accent
+  static const Color pureBlack = Color(0xFF000000);
+  static const Color pureWhite = Color(0xFFFFFFFF);
+  static const Color darkGray = Color(0xFF0A0A0A);
+  static const Color lightGray = Color(0xFFF8F8F8);
+  static const Color mediumGray = Color(0xFF808080);
   
-  // Gradient Colors
-  static const Color gradientPurple = Color(0xFF6B4FBB);
-  static const Color gradientBlue = Color(0xFF4A90E2);
-  static const Color gradientPink = Color(0xFFE94B8C);
-  static const Color gradientOrange = Color(0xFFFF6B35);
+  // Purple accent - sophisticated and minimal
+  static const Color purplePrimary = Color(0xFF8B5CF6);
+  static const Color purpleLight = Color(0xFFA78BFA);
+  static const Color purpleDark = Color(0xFF7C3AED);
   
-  // Glassmorphism overlay
-  static Color glassOverlay = Colors.white.withOpacity(0.05);
+  // Glass colors
+  static Color glassWhite = pureWhite.withOpacity(0.1);
+  static Color glassBorder = pureWhite.withOpacity(0.2);
 
-  // Dark Theme with enhanced visuals
   static ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,
-    scaffoldBackgroundColor: primaryBlack,
-    primaryColor: primaryWhite,
+    scaffoldBackgroundColor: pureBlack,
+    primaryColor: pureWhite,
+    fontFamily: 'SF Pro Display',
     colorScheme: ColorScheme.dark(
-      primary: primaryWhite,
-      secondary: gradientPurple,
-      surface: accentGray,
-      background: primaryBlack,
-    ),
-    appBarTheme: AppBarTheme(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      iconTheme: IconThemeData(color: primaryWhite),
-      titleTextStyle: TextStyle(
-        color: primaryWhite,
-        fontSize: 20,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.5,
-      ),
+      primary: purplePrimary,
+      secondary: purpleLight,
+      surface: darkGray,
+      background: pureBlack,
     ),
     textTheme: TextTheme(
       displayLarge: TextStyle(
-        fontSize: 36,
-        fontWeight: FontWeight.w900,
-        color: primaryWhite,
-        letterSpacing: -1.5,
+        fontSize: 40,
+        fontWeight: FontWeight.w700,
+        color: pureWhite,
+        letterSpacing: -1.2,
         height: 1.1,
       ),
       displayMedium: TextStyle(
-        fontSize: 28,
+        fontSize: 32,
         fontWeight: FontWeight.w700,
-        color: primaryWhite,
-        letterSpacing: -0.5,
+        color: pureWhite,
+        letterSpacing: -0.8,
+      ),
+      headlineSmall: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.w600,
+        color: pureWhite,
       ),
       bodyLarge: TextStyle(
         fontSize: 17,
         color: mediumGray,
-        height: 1.6,
+        height: 1.5,
         letterSpacing: 0.2,
       ),
       bodyMedium: TextStyle(
         fontSize: 15,
         color: mediumGray,
-        letterSpacing: 0.2,
-      ),
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: primaryWhite,
-        foregroundColor: primaryBlack,
-        elevation: 0,
-        padding: EdgeInsets.symmetric(horizontal: 32, vertical: 18),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        textStyle: TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.5,
-        ),
       ),
     ),
   );
 
-  // Light Theme with enhanced visuals
   static ThemeData lightTheme = ThemeData(
     brightness: Brightness.light,
-    scaffoldBackgroundColor: primaryWhite,
-    primaryColor: primaryBlack,
+    scaffoldBackgroundColor: pureWhite,
+    primaryColor: pureBlack,
+    fontFamily: 'SF Pro Display',
     colorScheme: ColorScheme.light(
-      primary: primaryBlack,
-      secondary: gradientBlue,
+      primary: purplePrimary,
+      secondary: purpleLight,
       surface: lightGray,
-      background: primaryWhite,
-    ),
-    appBarTheme: AppBarTheme(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      iconTheme: IconThemeData(color: primaryBlack),
-      titleTextStyle: TextStyle(
-        color: primaryBlack,
-        fontSize: 20,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.5,
-      ),
+      background: pureWhite,
     ),
     textTheme: TextTheme(
       displayLarge: TextStyle(
-        fontSize: 36,
-        fontWeight: FontWeight.w900,
-        color: primaryBlack,
-        letterSpacing: -1.5,
+        fontSize: 40,
+        fontWeight: FontWeight.w700,
+        color: pureBlack,
+        letterSpacing: -1.2,
         height: 1.1,
       ),
       displayMedium: TextStyle(
-        fontSize: 28,
+        fontSize: 32,
         fontWeight: FontWeight.w700,
-        color: primaryBlack,
-        letterSpacing: -0.5,
+        color: pureBlack,
+        letterSpacing: -0.8,
+      ),
+      headlineSmall: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.w600,
+        color: pureBlack,
       ),
       bodyLarge: TextStyle(
         fontSize: 17,
         color: mediumGray,
-        height: 1.6,
+        height: 1.5,
         letterSpacing: 0.2,
       ),
       bodyMedium: TextStyle(
         fontSize: 15,
         color: mediumGray,
-        letterSpacing: 0.2,
-      ),
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: primaryBlack,
-        foregroundColor: primaryWhite,
-        elevation: 0,
-        padding: EdgeInsets.symmetric(horizontal: 32, vertical: 18),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        textStyle: TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.5,
-        ),
       ),
     ),
   );
