@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/onboarding_model.dart';
-import '../../widgets/theme_toggle_button.dart';
-import '../../widgets/animated_background.dart';
-import '../../widgets/floating_orbs.dart';
-import '../../widgets/gradient_button.dart';
-import '../../widgets/app_logo.dart';
+import '../../widgets/theme_toggle.dart';
+import '../../widgets/purple_button.dart';
+import '../../widgets/logo_badge.dart';
+import '../../widgets/gradient_orb.dart';
+import '../../widgets/glass_container.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/theme/app_theme.dart';
 import '../auth/auth_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -14,54 +16,14 @@ class OnboardingScreen extends StatefulWidget {
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> with TickerProviderStateMixin {
+class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  late List<AnimationController> _iconControllers;
-  late List<Animation<double>> _iconAnimations;
-  late AnimationController _backgroundController;
-
-  @override
-  void initState() {
-    super.initState();
-    
-    _backgroundController = AnimationController(
-      duration: Duration(milliseconds: 10000),
-      vsync: this,
-    )..repeat();
-
-    _iconControllers = List.generate(
-      OnboardingData.pages.length,
-      (index) => AnimationController(
-        duration: Duration(milliseconds: AppConstants.iconAnimationDuration),
-        vsync: this,
-      ),
-    );
-
-    _iconAnimations = _iconControllers.map((controller) {
-      return Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: controller, curve: Curves.elasticOut),
-      );
-    }).toList();
-
-    _iconControllers[0].forward();
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    _backgroundController.dispose();
-    for (var controller in _iconControllers) {
-      controller.dispose();
-    }
-    super.dispose();
-  }
 
   void _onPageChanged(int page) {
     setState(() {
       _currentPage = page;
     });
-    _iconControllers[page].forward();
   }
 
   Future<void> _completeOnboarding() async {
@@ -73,21 +35,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) => AuthScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(
-              opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
-                CurvedAnimation(parent: animation, curve: Curves.easeInOut),
-              ),
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: Offset(0.3, 0),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOutCubic,
-                )),
-                child: child,
-              ),
-            );
+            return FadeTransition(opacity: animation, child: child);
           },
           transitionDuration: Duration(milliseconds: AppConstants.animationDuration),
         ),
@@ -96,262 +44,217 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
   }
 
   @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          AnimatedBackground(controller: _backgroundController, isDark: isDark),
-          FloatingOrbs(controller: _backgroundController, isDark: isDark, showMultiple: true),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [AppTheme.pureBlack, AppTheme.darkGray, AppTheme.pureBlack]
+                : [AppTheme.pureWhite, AppTheme.lightGray, AppTheme.pureWhite],
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Gradient orbs
+            GradientOrb(
+              size: 400,
+              alignment: Alignment.topRight,
+              colors: [AppTheme.purplePrimary, Colors.transparent],
+              opacity: 0.3,
+            ),
+            GradientOrb(
+              size: 350,
+              alignment: Alignment.bottomLeft,
+              colors: [AppTheme.purpleLight, Colors.transparent],
+              opacity: 0.25,
+            ),
 
-          SafeArea(
-            child: Column(
-              children: [
-                // Header
-                Padding(
-                  padding: EdgeInsets.all(AppConstants.spacingLarge),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      AppLogo(isDark: isDark),
-                      ThemeToggleButton(),
-                    ],
+            SafeArea(
+              child: Column(
+                children: [
+                  // Header
+                  Padding(
+                    padding: EdgeInsets.all(AppConstants.spaceL),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        LogoBadge(),
+                        ThemeToggle(),
+                      ],
+                    ),
                   ),
-                ),
 
-                SizedBox(height: 20),
+                  SizedBox(height: AppConstants.spaceXL),
 
-                // Page indicator
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: 10),
-                  child: Row(
+                  // Page indicators
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
                       OnboardingData.pages.length,
                       (index) => AnimatedContainer(
-                        duration: Duration(milliseconds: 400),
-                        curve: Curves.easeInOut,
-                        margin: EdgeInsets.symmetric(horizontal: 5),
-                        width: _currentPage == index ? 40 : 10,
-                        height: 10,
+                        duration: Duration(milliseconds: 300),
+                        margin: EdgeInsets.symmetric(horizontal: 4),
+                        width: _currentPage == index ? 40 : 8,
+                        height: 8,
                         decoration: BoxDecoration(
                           gradient: _currentPage == index
                               ? LinearGradient(
-                                  colors: isDark
-                                      ? [Color(0xFF6B4FBB), Color(0xFF4A90E2)]
-                                      : [Color(0xFF4A90E2), Color(0xFF6B4FBB)],
+                                  colors: [AppTheme.purplePrimary, AppTheme.purpleLight],
                                 )
                               : null,
                           color: _currentPage != index
-                              ? Color(0xFF6B6B6B).withOpacity(0.3)
+                              ? AppTheme.mediumGray.withOpacity(0.3)
                               : null,
-                          borderRadius: BorderRadius.circular(5),
-                          boxShadow: _currentPage == index
-                              ? [
-                                  BoxShadow(
-                                    color: (isDark ? Color(0xFF6B4FBB) : Color(0xFF4A90E2))
-                                        .withOpacity(0.4),
-                                    blurRadius: 10,
-                                    offset: Offset(0, 3),
-                                  ),
-                                ]
-                              : null,
+                          borderRadius: BorderRadius.circular(4),
                         ),
                       ),
                     ),
                   ),
-                ),
 
-                SizedBox(height: 20),
+                  SizedBox(height: AppConstants.spaceXXL),
 
-                // Content pages
-                Expanded(
-                  child: PageView.builder(
-                    controller: _pageController,
-                    onPageChanged: _onPageChanged,
-                    itemCount: OnboardingData.pages.length,
-                    itemBuilder: (context, index) {
-                      final page = OnboardingData.pages[index];
-                      return Padding(
-                        padding: EdgeInsets.symmetric(horizontal: AppConstants.spacingXLarge),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            // Animated icon with glassmorphic container
-                            ScaleTransition(
-                              scale: _iconAnimations[index],
-                              child: Container(
-                                width: AppConstants.iconContainerSize,
-                                height: AppConstants.iconContainerSize,
+                  // Content
+                  Expanded(
+                    child: PageView.builder(
+                      controller: _pageController,
+                      onPageChanged: _onPageChanged,
+                      itemCount: OnboardingData.pages.length,
+                      itemBuilder: (context, index) {
+                        final page = OnboardingData.pages[index];
+                        return Padding(
+                          padding: EdgeInsets.symmetric(horizontal: AppConstants.spaceXL),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // Icon
+                              Container(
+                                width: 140,
+                                height: 140,
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(AppConstants.borderRadiusXXLarge),
                                   gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: _getGradientColors(index, isDark),
+                                    colors: page.gradient,
                                   ),
+                                  borderRadius: BorderRadius.circular(AppConstants.radiusXLarge),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: _getGradientColors(index, isDark)[0]
-                                          .withOpacity(0.5),
-                                      blurRadius: 30,
-                                      offset: Offset(0, 15),
-                                      spreadRadius: 5,
+                                      color: page.gradient[0].withOpacity(0.6),
+                                      blurRadius: 40,
+                                      offset: Offset(0, 20),
                                     ),
                                   ],
                                 ),
-                                child: Stack(
-                                  children: [
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(AppConstants.borderRadiusXXLarge),
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [
-                                            Colors.white.withOpacity(0.2),
-                                            Colors.white.withOpacity(0.05),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    Center(
-                                      child: Icon(
-                                        page.icon,
-                                        size: 75,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
+                                child: Icon(
+                                  page.icon,
+                                  size: 70,
+                                  color: Colors.white,
                                 ),
                               ),
-                            ),
 
-                            SizedBox(height: 60),
+                              SizedBox(height: AppConstants.spaceXXL + AppConstants.spaceL),
 
-                            ShaderMask(
-                              shaderCallback: (bounds) => LinearGradient(
-                                colors: isDark
-                                    ? [Colors.white, Color(0xFFB8B8B8)]
-                                    : [Colors.black, Color(0xFF4A4A4A)],
-                              ).createShader(bounds),
-                              child: Text(
+                              // Title
+                              Text(
                                 page.title,
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
-                                  height: 1.2,
-                                  letterSpacing: -0.5,
+                                style: Theme.of(context).textTheme.displayMedium,
+                              ),
+
+                              SizedBox(height: AppConstants.spaceL),
+
+                              // Description
+                              GlassContainer(
+                                isDark: isDark,
+                                borderRadius: AppConstants.radiusMedium,
+                                padding: EdgeInsets.all(AppConstants.spaceL),
+                                child: Text(
+                                  page.description,
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.bodyLarge,
                                 ),
                               ),
-                            ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
 
-                            SizedBox(height: AppConstants.spacingLarge),
-
-                            Container(
-                              padding: EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: isDark
-                                    ? Colors.white.withOpacity(0.05)
-                                    : Colors.black.withOpacity(0.03),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: isDark
+                  // Buttons
+                  Padding(
+                    padding: EdgeInsets.all(AppConstants.spaceXL),
+                    child: Row(
+                      children: [
+                        if (_currentPage < OnboardingData.pages.length - 1)
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                              child: TextButton(
+                                onPressed: _completeOnboarding,
+                                style: TextButton.styleFrom(
+                                  backgroundColor: isDark
                                       ? Colors.white.withOpacity(0.1)
-                                      : Colors.black.withOpacity(0.08),
+                                      : Colors.black.withOpacity(0.05),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: AppConstants.spaceL,
+                                    vertical: AppConstants.spaceM,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
+                                  ),
                                 ),
-                              ),
-                              child: Text(
-                                page.description,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 17,
-                                  color: Color(0xFF6B6B6B),
-                                  height: 1.6,
-                                  letterSpacing: 0.2,
+                                child: Text(
+                                  'Skip',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: AppTheme.mediumGray,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
                             ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-
-                // Action buttons
-                Padding(
-                  padding: EdgeInsets.all(AppConstants.spacingXLarge),
-                  child: Row(
-                    children: [
-                      if (_currentPage < OnboardingData.pages.length - 1)
-                        Container(
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? Colors.white.withOpacity(0.08)
-                                : Colors.black.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(AppConstants.borderRadiusSmall),
                           ),
-                          child: TextButton(
-                            onPressed: _completeOnboarding,
-                            child: Text(
-                              'Skip',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Color(0xFF6B6B6B),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                      
-                      Spacer(),
+                        
+                        Spacer(),
 
-                      GradientButton(
-                        text: _currentPage < OnboardingData.pages.length - 1
-                            ? 'Next'
-                            : 'Get Started',
-                        onPressed: () {
-                          if (_currentPage < OnboardingData.pages.length - 1) {
-                            _pageController.nextPage(
-                              duration: Duration(milliseconds: AppConstants.pageTransitionDuration),
-                              curve: Curves.easeInOutCubic,
-                            );
-                          } else {
-                            _completeOnboarding();
-                          }
-                        },
-                        isDark: isDark,
-                        icon: _currentPage < OnboardingData.pages.length - 1
-                            ? Icons.arrow_forward_rounded
-                            : Icons.rocket_launch_rounded,
-                      ),
-                    ],
+                        PurpleButton(
+                          text: _currentPage < OnboardingData.pages.length - 1
+                              ? 'Next'
+                              : 'Get Started',
+                          onPressed: () {
+                            if (_currentPage < OnboardingData.pages.length - 1) {
+                              _pageController.nextPage(
+                                duration: Duration(milliseconds: 400),
+                                curve: Curves.easeInOut,
+                              );
+                            } else {
+                              _completeOnboarding();
+                            }
+                          },
+                          icon: _currentPage < OnboardingData.pages.length - 1
+                              ? Icons.arrow_forward_rounded
+                              : Icons.rocket_launch_rounded,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
-  }
-
-  List<Color> _getGradientColors(int index, bool isDark) {
-    final gradients = isDark
-        ? [
-            [Color(0xFF6B4FBB), Color(0xFF4A90E2)],
-            [Color(0xFF4A90E2), Color(0xFFE94B8C)],
-            [Color(0xFFE94B8C), Color(0xFFFF6B35)],
-          ]
-        : [
-            [Color(0xFF4A90E2), Color(0xFF6B4FBB)],
-            [Color(0xFFE94B8C), Color(0xFF4A90E2)],
-            [Color(0xFFFF6B35), Color(0xFFE94B8C)],
-          ];
-    return gradients[index % gradients.length];
   }
 }

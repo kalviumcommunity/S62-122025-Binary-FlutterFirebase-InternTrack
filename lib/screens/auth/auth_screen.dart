@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../../widgets/theme_toggle_button.dart';
-import '../../../widgets/animated_background.dart';
-import '../../../widgets/floating_orbs.dart';
-import '../../../widgets/gradient_button.dart';
-import '../../../widgets/glassmorphic_container.dart';
-import '../../../widgets/app_logo.dart';
-import '../../../widgets/custom_text_field.dart';
-import '../../../core/constants/app_constants.dart';
+import '../../widgets/theme_toggle.dart';
+import '../../widgets/purple_button.dart';
+import '../../widgets/logo_badge.dart';
+import '../../widgets/gradient_orb.dart';
+import '../../widgets/glass_container.dart';
+import '../../widgets/glass_text_field.dart';
+import '../../core/constants/app_constants.dart';
+import '../../core/theme/app_theme.dart';
 import '../home_screen.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -15,7 +16,7 @@ class AuthScreen extends StatefulWidget {
   State<AuthScreen> createState() => _AuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
+class _AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -24,43 +25,9 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
   bool _isLogin = true;
   bool _isLoading = false;
   bool _obscurePassword = true;
-  
-  late AnimationController _backgroundController;
-  late AnimationController _formController;
-  late Animation<double> _formAnimation;
-  late Animation<Offset> _slideAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    
-    _backgroundController = AnimationController(
-      duration: Duration(milliseconds: AppConstants.backgroundAnimationDuration),
-      vsync: this,
-    )..repeat();
-
-    _formController = AnimationController(
-      duration: Duration(milliseconds: AppConstants.animationDuration),
-      vsync: this,
-    );
-
-    _formAnimation = CurvedAnimation(
-      parent: _formController,
-      curve: Curves.easeOutCubic,
-    );
-
-    _slideAnimation = Tween<Offset>(
-      begin: Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(_formAnimation);
-
-    _formController.forward();
-  }
 
   @override
   void dispose() {
-    _backgroundController.dispose();
-    _formController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _nameController.dispose();
@@ -71,8 +38,6 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
     setState(() {
       _isLogin = !_isLogin;
     });
-    _formController.reset();
-    _formController.forward();
   }
 
   Future<void> _submit() async {
@@ -119,19 +84,38 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          AnimatedBackground(controller: _backgroundController, isDark: isDark),
-          FloatingOrbs(controller: _backgroundController, isDark: isDark),
-          
-          SafeArea(
-            child: SingleChildScrollView(
-              physics: BouncingScrollPhysics(),
-              child: Padding(
-                padding: EdgeInsets.all(AppConstants.spacingLarge),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [AppTheme.pureBlack, AppTheme.darkGray, AppTheme.pureBlack]
+                : [AppTheme.pureWhite, AppTheme.lightGray, AppTheme.pureWhite],
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Gradient orbs
+            GradientOrb(
+              size: 400,
+              alignment: Alignment.topRight,
+              colors: [AppTheme.purplePrimary, Colors.transparent],
+              opacity: 0.3,
+            ),
+            GradientOrb(
+              size: 350,
+              alignment: Alignment.bottomLeft,
+              colors: [AppTheme.purpleLight, Colors.transparent],
+              opacity: 0.25,
+            ),
+
+            SafeArea(
+              child: SingleChildScrollView(
+                physics: BouncingScrollPhysics(),
+                padding: EdgeInsets.all(AppConstants.spaceL),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -139,183 +123,145 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        AppLogo(isDark: isDark),
-                        ThemeToggleButton(),
+                        LogoBadge(),
+                        ThemeToggle(),
                       ],
                     ),
 
-                    SizedBox(height: size.height * 0.08),
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.08),
 
-                    // Welcome text
-                    FadeTransition(
-                      opacity: _formAnimation,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ShaderMask(
-                            shaderCallback: (bounds) => LinearGradient(
-                              colors: isDark
-                                  ? [Colors.white, Color(0xFFB8B8B8)]
-                                  : [Colors.black, Color(0xFF4A4A4A)],
-                            ).createShader(bounds),
-                            child: Text(
-                              _isLogin ? 'Welcome\nBack!' : 'Create\nAccount',
-                              style: TextStyle(
-                                fontSize: 44,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                                height: 1.1,
-                                letterSpacing: -1.5,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 12),
-                          Container(
-                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? Colors.white.withOpacity(0.05)
-                                  : Colors.black.withOpacity(0.03),
-                              borderRadius: BorderRadius.circular(AppConstants.borderRadiusSmall),
-                              border: Border.all(
-                                color: isDark
-                                    ? Colors.white.withOpacity(0.1)
-                                    : Colors.black.withOpacity(0.05),
-                              ),
-                            ),
-                            child: Text(
-                              _isLogin
-                                  ? 'Sign in to continue your journey'
-                                  : 'Start organizing your career today',
-                              style: TextStyle(
-                                fontSize: 15,
-                                color: Color(0xFF6B6B6B),
-                                letterSpacing: 0.3,
-                              ),
-                            ),
-                          ),
-                        ],
+                    // Title
+                    Text(
+                      _isLogin ? 'Welcome\nBack' : 'Create\nAccount',
+                      style: Theme.of(context).textTheme.displayLarge,
+                    ),
+
+                    SizedBox(height: AppConstants.spaceM),
+
+                    GlassContainer(
+                      isDark: isDark,
+                      borderRadius: AppConstants.radiusSmall,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppConstants.spaceM,
+                        vertical: AppConstants.spaceS + 2,
+                      ),
+                      child: Text(
+                        _isLogin
+                            ? 'Sign in to continue your journey'
+                            : 'Start organizing your career today',
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ),
 
-                    SizedBox(height: 50),
+                    SizedBox(height: AppConstants.spaceXXL + AppConstants.spaceL),
 
                     // Form
-                    SlideTransition(
-                      position: _slideAnimation,
-                      child: FadeTransition(
-                        opacity: _formAnimation,
-                        child: GlassmorphicContainer(
-                          isDark: isDark,
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              children: [
-                                if (!_isLogin) ...[
-                                  CustomTextField(
-                                    controller: _nameController,
-                                    label: 'Full Name',
-                                    hint: 'Enter your name',
-                                    prefixIcon: Icons.person_outline_rounded,
-                                    isDark: isDark,
-                                  ),
-                                  SizedBox(height: 20),
-                                ],
-                                
-                                CustomTextField(
-                                  controller: _emailController,
-                                  label: 'Email',
-                                  hint: 'Enter your email',
-                                  prefixIcon: Icons.email_outlined,
-                                  keyboardType: TextInputType.emailAddress,
-                                  isDark: isDark,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your email';
-                                    }
-                                    if (!value.contains('@')) {
-                                      return 'Please enter a valid email';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                
-                                SizedBox(height: 20),
-                                
-                                CustomTextField(
-                                  controller: _passwordController,
-                                  label: 'Password',
-                                  hint: 'Enter your password',
-                                  prefixIcon: Icons.lock_outline_rounded,
-                                  obscureText: _obscurePassword,
-                                  isDark: isDark,
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      _obscurePassword
-                                          ? Icons.visibility_off_rounded
-                                          : Icons.visibility_rounded,
-                                      color: Color(0xFF6B6B6B),
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        _obscurePassword = !_obscurePassword;
-                                      });
-                                    },
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your password';
-                                    }
-                                    if (value.length < 6) {
-                                      return 'Password must be at least 6 characters';
-                                    }
-                                    return null;
-                                  },
-                                ),
-
-                                SizedBox(height: AppConstants.spacingXLarge),
-
-                                GradientButton(
-                                  text: _isLogin ? 'Sign In' : 'Create Account',
-                                  onPressed: _submit,
-                                  isDark: isDark,
-                                  isLoading: _isLoading,
-                                  icon: Icons.arrow_forward_rounded,
-                                ),
-                              ],
+                    GlassContainer(
+                      isDark: isDark,
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            if (!_isLogin) ...[
+                              GlassTextField(
+                                controller: _nameController,
+                                label: 'Full Name',
+                                hint: 'Enter your name',
+                                prefixIcon: Icons.person_outline_rounded,
+                                isDark: isDark,
+                              ),
+                              SizedBox(height: AppConstants.spaceL),
+                            ],
+                            
+                            GlassTextField(
+                              controller: _emailController,
+                              label: 'Email',
+                              hint: 'your@email.com',
+                              prefixIcon: Icons.email_outlined,
+                              keyboardType: TextInputType.emailAddress,
+                              isDark: isDark,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your email';
+                                }
+                                if (!value.contains('@')) {
+                                  return 'Please enter a valid email';
+                                }
+                                return null;
+                              },
                             ),
-                          ),
+                            
+                            SizedBox(height: AppConstants.spaceL),
+                            
+                            GlassTextField(
+                              controller: _passwordController,
+                              label: 'Password',
+                              hint: '••••••••',
+                              prefixIcon: Icons.lock_outline_rounded,
+                              obscureText: _obscurePassword,
+                              isDark: isDark,
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off_rounded
+                                      : Icons.visibility_rounded,
+                                  color: AppTheme.mediumGray,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your password';
+                                }
+                                if (value.length < 6) {
+                                  return 'Password must be at least 6 characters';
+                                }
+                                return null;
+                              },
+                            ),
+
+                            SizedBox(height: AppConstants.spaceXL),
+
+                            PurpleButton(
+                              text: _isLogin ? 'Sign In' : 'Create Account',
+                              onPressed: _submit,
+                              isLoading: _isLoading,
+                              icon: Icons.arrow_forward_rounded,
+                              width: double.infinity,
+                            ),
+                          ],
                         ),
                       ),
                     ),
 
-                    SizedBox(height: 28),
+                    SizedBox(height: AppConstants.spaceL),
 
                     // Toggle mode
-                    FadeTransition(
-                      opacity: _formAnimation,
-                      child: Center(
-                        child: TextButton(
-                          onPressed: _toggleMode,
-                          child: RichText(
-                            text: TextSpan(
-                              text: _isLogin
-                                  ? "Don't have an account? "
-                                  : 'Already have an account? ',
-                              style: TextStyle(
-                                color: Color(0xFF6B6B6B),
-                                fontSize: 15,
-                              ),
-                              children: [
-                                TextSpan(
-                                  text: _isLogin ? 'Sign Up' : 'Sign In',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    color: isDark ? Colors.white : Colors.black,
-                                  ),
-                                ),
-                              ],
+                    Center(
+                      child: TextButton(
+                        onPressed: _toggleMode,
+                        child: RichText(
+                          text: TextSpan(
+                            text: _isLogin
+                                ? "Don't have an account? "
+                                : 'Already have an account? ',
+                            style: TextStyle(
+                              color: AppTheme.mediumGray,
+                              fontSize: 15,
                             ),
+                            children: [
+                              TextSpan(
+                                text: _isLogin ? 'Sign Up' : 'Sign In',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.purplePrimary,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -324,8 +270,8 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

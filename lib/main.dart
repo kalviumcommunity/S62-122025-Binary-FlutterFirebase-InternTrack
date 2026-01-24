@@ -5,7 +5,7 @@ import 'firebase_options.dart';
 import 'core/theme/app_theme.dart';
 import 'core/providers/theme_provider.dart';
 import 'screens/splash/splash_screen.dart';
-import 'screens/onboarding/onboarding_screen.dart';
+import 'screens/auth/auth_screen.dart';
 import 'screens/home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -87,7 +87,7 @@ class AuthWrapper extends StatelessWidget {
           return HomeScreen();
         }
         
-        return OnboardingScreen();
+        return AuthScreen();
       },
     );
   }
