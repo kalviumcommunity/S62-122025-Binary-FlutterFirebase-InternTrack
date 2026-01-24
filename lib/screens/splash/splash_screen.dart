@@ -1,13 +1,14 @@
-// lib/features/splash/splash_screen.dart
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../main.dart';
+import 'package:provider/provider.dart';
+import '../../app/app.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/constants/strings.dart';
 import '../../core/constants/colors.dart';
 import '../../core/widgets/gradient_orb.dart';
+import '../../providers/auth_provider.dart';
 import '../onboarding/onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -44,6 +45,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       final hasSeenOnboarding = prefs.getBool(AppStrings.onboardingKey) ?? false;
 
       if (mounted) {
+        // Check auth state
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        await authProvider.checkAuthState();
+
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>

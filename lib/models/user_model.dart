@@ -1,0 +1,64 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+class UserModel {
+  final String uid;
+  final String email;
+  final String displayName;
+  final String role; // 'student' or 'mentor'
+  final DateTime createdAt;
+  final DateTime? lastLoginAt;
+
+  UserModel({
+    required this.uid,
+    required this.email,
+    required this.displayName,
+    this.role = 'student',
+    required this.createdAt,
+    this.lastLoginAt,
+  });
+
+  // Convert to Firestore document
+  Map<String, dynamic> toMap() {
+    return {
+      'uid': uid,
+      'email': email,
+      'displayName': displayName,
+      'role': role,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'lastLoginAt': lastLoginAt != null ? Timestamp.fromDate(lastLoginAt!) : null,
+    };
+  }
+
+  // Create from Firestore document
+  factory UserModel.fromMap(Map<String, dynamic> map) {
+    return UserModel(
+      uid: map['uid'] ?? '',
+      email: map['email'] ?? '',
+      displayName: map['displayName'] ?? '',
+      role: map['role'] ?? 'student',
+      createdAt: (map['createdAt'] as Timestamp).toDate(),
+      lastLoginAt: map['lastLoginAt'] != null 
+          ? (map['lastLoginAt'] as Timestamp).toDate() 
+          : null,
+    );
+  }
+
+  // Copy with method for updates
+  UserModel copyWith({
+    String? uid,
+    String? email,
+    String? displayName,
+    String? role,
+    DateTime? createdAt,
+    DateTime? lastLoginAt,
+  }) {
+    return UserModel(
+      uid: uid ?? this.uid,
+      email: email ?? this.email,
+      displayName: displayName ?? this.displayName,
+      role: role ?? this.role,
+      createdAt: createdAt ?? this.createdAt,
+      lastLoginAt: lastLoginAt ?? this.lastLoginAt,
+    );
+  }
+}
