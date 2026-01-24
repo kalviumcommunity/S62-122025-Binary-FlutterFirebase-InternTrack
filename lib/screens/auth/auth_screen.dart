@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../widgets/theme_toggle.dart';
-import '../../widgets/purple_button.dart';
-import '../../widgets/logo_badge.dart';
-import '../../widgets/gradient_orb.dart';
-import '../../widgets/glass_container.dart';
-import '../../widgets/glass_text_field.dart';
+import '../../core/widgets/theme_toggle.dart';
+import '../../core/widgets/purple_button.dart';
+import '../../core/widgets/logo_badge.dart';
+import '../../core/widgets/gradient_orb.dart';
+import '../../core/widgets/glass_container.dart';
+import '../../core/widgets/glass_text_field.dart';
 import '../../core/constants/app_constants.dart';
-import '../../core/theme/app_theme.dart';
-import '../home_screen.dart';
+import '../../core/constants/colors.dart';
+import '../dashboard/student_dashboard.dart';
 
 class AuthScreen extends StatefulWidget {
   @override
@@ -66,7 +66,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
       if (mounted) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => HomeScreen()),
+          MaterialPageRoute(builder: (_) => StudentDashboard()),
         );
       }
     } on FirebaseAuthException catch (e) {
@@ -92,8 +92,8 @@ class _AuthScreenState extends State<AuthScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: isDark
-                ? [AppTheme.pureBlack, AppTheme.darkGray, AppTheme.pureBlack]
-                : [AppTheme.pureWhite, AppTheme.lightGray, AppTheme.pureWhite],
+                ? [AppColors.pureBlack, AppColors.darkGray, AppColors.pureBlack]
+                : [AppColors.pureWhite, AppColors.lightGray, AppColors.pureWhite],
           ),
         ),
         child: Stack(
@@ -102,13 +102,13 @@ class _AuthScreenState extends State<AuthScreen> {
             GradientOrb(
               size: 400,
               alignment: Alignment.topRight,
-              colors: [AppTheme.purplePrimary, Colors.transparent],
+              colors: [AppColors.purplePrimary, Colors.transparent],
               opacity: 0.3,
             ),
             GradientOrb(
               size: 350,
               alignment: Alignment.bottomLeft,
-              colors: [AppTheme.purpleLight, Colors.transparent],
+              colors: [AppColors.purpleLight, Colors.transparent],
               opacity: 0.25,
             ),
 
@@ -205,7 +205,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                   _obscurePassword
                                       ? Icons.visibility_off_rounded
                                       : Icons.visibility_rounded,
-                                  color: AppTheme.mediumGray,
+                                  color: AppColors.mediumGray,
                                 ),
                                 onPressed: () {
                                   setState(() {
@@ -250,7 +250,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                 ? "Don't have an account? "
                                 : 'Already have an account? ',
                             style: TextStyle(
-                              color: AppTheme.mediumGray,
+                              color: AppColors.mediumGray,
                               fontSize: 15,
                             ),
                             children: [
@@ -258,7 +258,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                 text: _isLogin ? 'Sign Up' : 'Sign In',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
-                                  color: AppTheme.purplePrimary,
+                                  color: AppColors.purplePrimary,
                                 ),
                               ),
                             ],

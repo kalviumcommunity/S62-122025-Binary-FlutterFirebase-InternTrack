@@ -7,8 +7,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:s62_122025_binary_flutterfirebase_interntrack/app/app.dart';
 
-import 'package:s62_122025_binary_flutterfirebase_interntrack/main.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {

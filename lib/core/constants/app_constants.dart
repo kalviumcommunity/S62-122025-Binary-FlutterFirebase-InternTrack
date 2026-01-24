@@ -1,15 +1,8 @@
+// lib/core/constants/app_constants.dart
 class AppConstants {
-  // App Info
-  static const String appName = 'InternTrack';
-  static const String appTagline = 'Your career journey, organized';
-  
   // Timing
   static const int splashDuration = 2500;
   static const int animationDuration = 600;
-  
-  // Keys
-  static const String onboardingKey = 'hasSeenOnboarding';
-  static const String themeKey = 'isDarkMode';
   
   // Sizes
   static const double buttonHeight = 56.0;

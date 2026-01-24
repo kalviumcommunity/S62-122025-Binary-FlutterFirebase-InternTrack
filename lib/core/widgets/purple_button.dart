@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../core/constants/app_constants.dart';
-import '../core/theme/app_theme.dart';
+import '../constants/app_constants.dart';
+import '../constants/colors.dart';
 
 class PurpleButton extends StatelessWidget {
   final String text;
@@ -25,14 +25,14 @@ class PurpleButton extends StatelessWidget {
       width: width,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppTheme.purplePrimary, AppTheme.purpleLight],
+          colors: [AppColors.purplePrimary, AppColors.purpleLight],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
         borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.purplePrimary.withOpacity(0.5),
+            color: AppColors.purplePrimary.withOpacity(0.5),
             blurRadius: 20,
             offset: Offset(0, 10),
             spreadRadius: 0,
