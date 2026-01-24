@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-import '../core/constants/app_constants.dart';
-import '../core/theme/app_theme.dart';
+import '../constants/app_constants.dart';
+import '../constants/colors.dart';
 
 class GlassTextField extends StatelessWidget {
   final String label;
@@ -37,7 +37,7 @@ class GlassTextField extends StatelessWidget {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: isDark ? AppTheme.pureWhite : AppTheme.pureBlack,
+            color: isDark ? AppColors.pureWhite : AppColors.pureBlack,
           ),
         ),
         SizedBox(height: AppConstants.spaceS),
@@ -51,18 +51,18 @@ class GlassTextField extends StatelessWidget {
               keyboardType: keyboardType,
               validator: validator,
               style: TextStyle(
-                color: isDark ? AppTheme.pureWhite : AppTheme.pureBlack,
+                color: isDark ? AppColors.pureWhite : AppColors.pureBlack,
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle: TextStyle(
-                  color: AppTheme.mediumGray,
+                  color: AppColors.mediumGray,
                   fontWeight: FontWeight.w400,
                 ),
                 prefixIcon: prefixIcon != null
-                    ? Icon(prefixIcon, color: AppTheme.mediumGray, size: 22)
+                    ? Icon(prefixIcon, color: AppColors.mediumGray, size: 22)
                     : null,
                 suffixIcon: suffixIcon,
                 filled: true,
@@ -85,7 +85,7 @@ class GlassTextField extends StatelessWidget {
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
                   borderSide: BorderSide(
-                    color: AppTheme.purplePrimary,
+                    color: AppColors.purplePrimary,
                     width: 2,
                   ),
                 ),

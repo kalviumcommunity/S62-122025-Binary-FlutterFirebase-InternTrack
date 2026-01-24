@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/onboarding_model.dart';
-import '../../widgets/theme_toggle.dart';
-import '../../widgets/purple_button.dart';
-import '../../widgets/logo_badge.dart';
-import '../../widgets/gradient_orb.dart';
-import '../../widgets/glass_container.dart';
+import '../../core/widgets/theme_toggle.dart';
+import '../../core/widgets/purple_button.dart';
+import '../../core/widgets/logo_badge.dart';
+import '../../core/widgets/gradient_orb.dart';
+import '../../core/widgets/glass_container.dart';
 import '../../core/constants/app_constants.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/constants/strings.dart';
+import '../../core/constants/colors.dart';
 import '../auth/auth_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -28,7 +29,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Future<void> _completeOnboarding() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(AppConstants.onboardingKey, true);
+    await prefs.setBool(AppStrings.onboardingKey, true);
 
     if (mounted) {
       Navigator.of(context).pushReplacement(
@@ -60,8 +61,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: isDark
-                ? [AppTheme.pureBlack, AppTheme.darkGray, AppTheme.pureBlack]
-                : [AppTheme.pureWhite, AppTheme.lightGray, AppTheme.pureWhite],
+                ? [AppColors.pureBlack, AppColors.darkGray, AppColors.pureBlack]
+                : [AppColors.pureWhite, AppColors.lightGray, AppColors.pureWhite],
           ),
         ),
         child: Stack(
@@ -70,13 +71,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             GradientOrb(
               size: 400,
               alignment: Alignment.topRight,
-              colors: [AppTheme.purplePrimary, Colors.transparent],
+              colors: [AppColors.purplePrimary, Colors.transparent],
               opacity: 0.3,
             ),
             GradientOrb(
               size: 350,
               alignment: Alignment.bottomLeft,
-              colors: [AppTheme.purpleLight, Colors.transparent],
+              colors: [AppColors.purpleLight, Colors.transparent],
               opacity: 0.25,
             ),
 
@@ -110,11 +111,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         decoration: BoxDecoration(
                           gradient: _currentPage == index
                               ? LinearGradient(
-                                  colors: [AppTheme.purplePrimary, AppTheme.purpleLight],
+                                  colors: [AppColors.purplePrimary, AppColors.purpleLight],
                                 )
                               : null,
                           color: _currentPage != index
-                              ? AppTheme.mediumGray.withOpacity(0.3)
+                              ? AppColors.mediumGray.withOpacity(0.3)
                               : null,
                           borderRadius: BorderRadius.circular(4),
                         ),
@@ -218,7 +219,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   'Skip',
                                   style: TextStyle(
                                     fontSize: 16,
-                                    color: AppTheme.mediumGray,
+                                    color: AppColors.mediumGray,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-import '../core/providers/theme_provider.dart';
-import '../core/constants/app_constants.dart';
+import '../../../providers/theme_provider.dart';
+import '../constants/app_constants.dart';
 
 class ThemeToggle extends StatelessWidget {
   @override

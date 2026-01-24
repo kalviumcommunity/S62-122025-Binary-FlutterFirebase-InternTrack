@@ -1,6 +1,8 @@
+// lib/core/widgets/logo_badge.dart
 import 'package:flutter/material.dart';
-import '../core/constants/app_constants.dart';
-import '../core/theme/app_theme.dart';
+import '../constants/app_constants.dart';
+import '../constants/strings.dart';
+import '../constants/colors.dart';
 
 class LogoBadge extends StatelessWidget {
   @override
@@ -12,12 +14,12 @@ class LogoBadge extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppTheme.purplePrimary, AppTheme.purpleLight],
+          colors: [AppColors.purplePrimary, AppColors.purpleLight],
         ),
         borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.purplePrimary.withOpacity(0.5),
+            color: AppColors.purplePrimary.withOpacity(0.5),
             blurRadius: 15,
             offset: Offset(0, 5),
           ),
@@ -33,7 +35,7 @@ class LogoBadge extends StatelessWidget {
           ),
           SizedBox(width: AppConstants.spaceS),
           Text(
-            AppConstants.appName,
+            AppStrings.appName,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,

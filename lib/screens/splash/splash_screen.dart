@@ -1,11 +1,13 @@
+// lib/features/splash/splash_screen.dart
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../main.dart';
 import '../../core/constants/app_constants.dart';
-import '../../core/theme/app_theme.dart';
-import '../../widgets/gradient_orb.dart';
+import '../../core/constants/strings.dart';
+import '../../core/constants/colors.dart';
+import '../../core/widgets/gradient_orb.dart';
 import '../onboarding/onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -39,7 +41,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     Timer(Duration(milliseconds: AppConstants.splashDuration), () async {
       final prefs = await SharedPreferences.getInstance();
-      final hasSeenOnboarding = prefs.getBool(AppConstants.onboardingKey) ?? false;
+      final hasSeenOnboarding = prefs.getBool(AppStrings.onboardingKey) ?? false;
 
       if (mounted) {
         Navigator.of(context).pushReplacement(
@@ -76,8 +78,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: isDark
-                ? [AppTheme.pureBlack, AppTheme.darkGray, AppTheme.pureBlack]
-                : [AppTheme.pureWhite, AppTheme.lightGray, AppTheme.pureWhite],
+                ? [AppColors.pureBlack, AppColors.darkGray, AppColors.pureBlack]
+                : [AppColors.pureWhite, AppColors.lightGray, AppColors.pureWhite],
           ),
         ),
         child: Stack(
@@ -86,13 +88,13 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             GradientOrb(
               size: 400,
               alignment: Alignment.topRight,
-              colors: [AppTheme.purplePrimary, Colors.transparent],
+              colors: [AppColors.purplePrimary, Colors.transparent],
               opacity: 0.3,
             ),
             GradientOrb(
               size: 350,
               alignment: Alignment.bottomLeft,
-              colors: [AppTheme.purpleLight, Colors.transparent],
+              colors: [AppColors.purpleLight, Colors.transparent],
               opacity: 0.25,
             ),
 
@@ -111,12 +113,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                         height: 120,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [AppTheme.purplePrimary, AppTheme.purpleLight],
+                            colors: [AppColors.purplePrimary, AppColors.purpleLight],
                           ),
                           borderRadius: BorderRadius.circular(AppConstants.radiusXLarge),
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.purplePrimary.withOpacity(0.6),
+                              color: AppColors.purplePrimary.withOpacity(0.6),
                               blurRadius: 40,
                               offset: Offset(0, 20),
                               spreadRadius: 5,
@@ -134,7 +136,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
                       // App Name
                       Text(
-                        AppConstants.appName,
+                        AppStrings.appName,
                         style: Theme.of(context).textTheme.displayLarge,
                       ),
 
@@ -162,10 +164,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                               ),
                             ),
                             child: Text(
-                              AppConstants.appTagline,
+                              AppStrings.appTagline,
                               style: TextStyle(
                                 fontSize: 15,
-                                color: AppTheme.mediumGray,
+                                color: AppColors.mediumGray,
                                 fontWeight: FontWeight.w500,
                                 letterSpacing: 0.5,
                               ),
@@ -183,7 +185,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                         child: CircularProgressIndicator(
                           strokeWidth: 3,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            AppTheme.purplePrimary,
+                            AppColors.purplePrimary,
                           ),
                         ),
                       ),
