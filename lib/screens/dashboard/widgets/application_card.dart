@@ -1,4 +1,3 @@
-// lib/features/dashboard/widgets/application_card.dart
 import 'package:flutter/material.dart';
 import '../../../core/widgets/glass_container.dart';
 import '../../../core/constants/app_constants.dart';

@@ -1,4 +1,3 @@
-// lib/app/app_routes.dart
 import 'package:flutter/material.dart';
 import '../screens/onboarding/onboarding_screen.dart';
 import '../screens/auth/auth_screen.dart';

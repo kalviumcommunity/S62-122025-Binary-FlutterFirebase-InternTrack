@@ -1,10 +1,13 @@
-// lib/app/app.dart
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import 'app_theme.dart';
 import 'app_routes.dart';
 import '../providers/theme_provider.dart';
+import '../providers/auth_provider.dart';
 import '../screens/splash/splash_screen.dart';
+import '../screens/auth/auth_screen.dart';
+import '../screens/dashboard/student_dashboard.dart';
 
 class MyApp extends StatefulWidget {
   @override
@@ -51,6 +54,36 @@ class _MyAppState extends State<MyApp> {
         home: SplashScreen(),
         routes: AppRoutes.routes,
       ),
+    );
+  }
+}
+
+// Auth Wrapper - handles auth state changes
+class AuthWrapper extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
+        // Show loading while checking auth state
+        if (authProvider.currentUser == null && !authProvider.isLoading) {
+          // Not authenticated
+          return AuthScreen();
+        } else if (authProvider.currentUser != null) {
+          // Authenticated
+          return StudentDashboard();
+        } else {
+          // Loading
+          return Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  Theme.of(context).primaryColor,
+                ),
+              ),
+            ),
+          );
+        }
+      },
     );
   }
 }
