@@ -917,3 +917,130 @@ Students ask mentors for guidance and support.
   - Page transitions with fade and slide
   - Icon animations with elastic curves
   - Button hover and loading states
+
+
+## Internship Tracking System
+
+### Overview
+InternTrack provides a comprehensive internship management system for students to track their applications from initial submission through final outcomes.
+
+### Features
+
+#### Dashboard
+- **Statistics Overview**: View total applications, interviews, and offers at a glance
+- **Upcoming Deadlines**: Never miss an application deadline with automatic reminders
+- **Recent Activity**: Quick access to your most recent applications
+- **Progress Analytics**: Track your success rate and application trends
+
+#### Internship Management
+- **Full CRUD Operations**: Create, view, edit, and delete internship applications
+- **Status Tracking**: Monitor applications through 6 distinct stages:
+  - Applied
+  - Interviewing
+  - Offered
+  - Accepted
+  - Rejected
+  - Archived
+- **Priority System**: Categorize applications by importance (High/Medium/Low)
+- **Timeline**: Automatic activity tracking for all status changes
+- **Rich Details**: Store location, salary, deadline, and custom notes
+
+#### Learning & Reflection
+- **Personal Reflections**: Document your thoughts and experiences
+- **Learning Outcomes**: Track what you learned from each opportunity
+- **Skills Tracking**: Build your skill portfolio with each application
+- **Progress Reports**: View your professional development over time
+
+#### Organization
+- **Smart Filtering**: Filter by status or priority
+- **Flexible Sorting**: Sort by application date, deadline, or priority
+- **Archive System**: Keep completed internships for future reference
+- **Search**: Quickly find specific applications
+
+### Data Model
+
+#### Internship
+```dart
+{
+  id: String
+  studentId: String
+  company: String
+  role: String
+  status: InternshipStatus
+  priority: Priority
+  deadline: DateTime?
+  appliedDate: DateTime
+  description: String?
+  location: String?
+  salary: String?
+  skillsGained: List<String>
+  reflectionNotes: String?
+  learningOutcomes: String?
+  timeline: List<TimelineEvent>
+  isArchived: bool
+  archivedDate: DateTime?
+}
+```
+
+### Usage
+
+#### Adding an Internship
+1. Navigate to the Internships tab
+2. Tap the "Add Internship" floating action button
+3. Fill in the required fields (Company, Role)
+4. Optionally add location, salary, deadline, and description
+5. Select status and priority
+6. Tap "Add Internship"
+
+#### Tracking Progress
+1. Open any internship from the list
+2. Edit status as your application progresses
+3. Add reflections and learning outcomes
+4. Track skills gained throughout the process
+5. View the automatically generated timeline
+
+#### Managing Archives
+1. Go to Profile → Archived Internships
+2. View all completed applications
+3. Restore archived internships if needed
+4. Analyze your historical data
+
+### Technical Stack
+- **Frontend**: Flutter with Material Design
+- **State Management**: Provider
+- **Backend**: Firebase Firestore
+- **Authentication**: Firebase Auth
+- **UI Design**: Custom glassmorphism components
+
+### Firestore Structure
+```
+internships/
+  └── {internshipId}
+      ├── studentId: string
+      ├── company: string
+      ├── role: string
+      ├── status: string
+      ├── priority: string
+      ├── deadline: timestamp
+      ├── appliedDate: timestamp
+      ├── timeline: array
+      ├── isArchived: boolean
+      └── ... other fields
+```
+
+### Security Rules
+Ensure your Firestore rules allow users to only access their own data:
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /internships/{internshipId} {
+      allow read, write: if request.auth != null 
+        && request.auth.uid == resource.data.studentId;
+      allow create: if request.auth != null 
+        && request.auth.uid == request.resource.data.studentId;
+    }
+  }
+}
+```
+
