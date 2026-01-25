@@ -53,6 +53,7 @@ class _MyAppState extends State<MyApp> {
         themeMode: _themeMode,
         home: SplashScreen(),
         routes: AppRoutes.routes,
+        onGenerateRoute: AppRoutes.onGenerateRoute,
       ),
     );
   }

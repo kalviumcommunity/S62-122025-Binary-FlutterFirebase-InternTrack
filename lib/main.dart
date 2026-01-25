@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'app/app.dart';
 import 'providers/auth_provider.dart';
+import 'providers/internship_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,10 +18,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        // Add more providers here as needed:
-        // ChangeNotifierProvider(create: (_) => InternshipProvider()),
-        // ChangeNotifierProvider(create: (_) => MentorProvider()),
-        // ChangeNotifierProvider(create: (_) => FeedbackProvider()),
+        ChangeNotifierProvider(create: (_) => InternshipProvider()),
       ],
       child: MyApp(),
     ),
