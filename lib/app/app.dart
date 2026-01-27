@@ -1,3 +1,4 @@
+// lib/app/app.dart (UPDATED)
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,7 @@ import '../providers/auth_provider.dart';
 import '../screens/splash/splash_screen.dart';
 import '../screens/auth/auth_screen.dart';
 import '../screens/dashboard/student_dashboard.dart';
+import '../screens/dashboard/mentor_dashboard.dart';
 
 class MyApp extends StatefulWidget {
   @override
@@ -59,7 +61,7 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-// Auth Wrapper - handles auth state changes
+// Auth Wrapper - handles auth state changes and role-based routing
 class AuthWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -70,8 +72,14 @@ class AuthWrapper extends StatelessWidget {
           // Not authenticated
           return AuthScreen();
         } else if (authProvider.currentUser != null) {
-          // Authenticated
-          return StudentDashboard();
+          // Authenticated - route based on role
+          final user = authProvider.currentUser!;
+          
+          if (user.role == 'mentor') {
+            return MentorDashboard();
+          } else {
+            return StudentDashboard();
+          }
         } else {
           // Loading
           return Scaffold(

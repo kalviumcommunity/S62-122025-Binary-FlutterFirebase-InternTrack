@@ -1,24 +1,28 @@
+// lib/services/auth_service.dart (UPDATED)
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../models/user_model.dart';
+import '../models/user_model.dart';
+import 'mentor_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final MentorService _mentorService = MentorService();
 
-  // Get current user stream
   Stream<User?> get authStateChanges => _auth.authStateChanges();
-
-  // Get current user
   User? get currentUser => _auth.currentUser;
 
-  // Sign up with email and password
+  // UPDATED: Sign up with automatic role detection
   Future<UserModel?> signUp({
     required String email,
     required String password,
     required String displayName,
   }) async {
     try {
+      // Check if email has a mentor invitation
+      final invitation = await _mentorService.checkInvitation(email.trim());
+      final role = invitation != null ? 'mentor' : 'student';
+
       // Create user in Firebase Auth
       final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email.trim(),
@@ -28,21 +32,31 @@ class AuthService {
       final user = userCredential.user;
       if (user == null) return null;
 
-      // Update display name
       await user.updateDisplayName(displayName.trim());
       await user.reload();
 
-      // Create user document in Firestore
+      // Create user document with determined role
       final userModel = UserModel(
         uid: user.uid,
         email: email.trim(),
         displayName: displayName.trim(),
-        role: 'student',
+        role: role,
         createdAt: DateTime.now(),
         lastLoginAt: DateTime.now(),
       );
 
       await _firestore.collection('users').doc(user.uid).set(userModel.toMap());
+
+      // If mentor, create the mentor-student link
+      if (role == 'mentor' && invitation != null) {
+        await _mentorService.createMentorLink(
+          mentorId: user.uid,
+          studentId: invitation.studentId,
+          studentName: invitation.studentName,
+          studentEmail: invitation.studentEmail,
+          inviteId: invitation.id,
+        );
+      }
 
       return userModel;
     } on FirebaseAuthException catch (e) {
@@ -52,7 +66,7 @@ class AuthService {
     }
   }
 
-  // Sign in with email and password
+  // Sign in (unchanged)
   Future<UserModel?> signIn({
     required String email,
     required String password,
@@ -66,16 +80,13 @@ class AuthService {
       final user = userCredential.user;
       if (user == null) return null;
 
-      // Update last login time
       await _firestore.collection('users').doc(user.uid).update({
         'lastLoginAt': Timestamp.fromDate(DateTime.now()),
       });
 
-      // Fetch and return user data
       final userDoc = await _firestore.collection('users').doc(user.uid).get();
       
       if (!userDoc.exists) {
-        // Create user document if it doesn't exist (edge case)
         final userModel = UserModel(
           uid: user.uid,
           email: user.email ?? email.trim(),
@@ -96,7 +107,6 @@ class AuthService {
     }
   }
 
-  // Sign out
   Future<void> signOut() async {
     try {
       await _auth.signOut();
@@ -105,7 +115,6 @@ class AuthService {
     }
   }
 
-  // Get user data from Firestore
   Future<UserModel?> getUserData(String uid) async {
     try {
       final doc = await _firestore.collection('users').doc(uid).get();
@@ -116,7 +125,6 @@ class AuthService {
     }
   }
 
-  // Handle Firebase Auth exceptions
   String _handleAuthException(FirebaseAuthException e) {
     switch (e.code) {
       case 'weak-password':

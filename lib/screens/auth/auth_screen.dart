@@ -53,6 +53,9 @@ class _AuthScreenState extends State<AuthScreen> {
       );
     } else {
       if (_nameController.text.trim().isEmpty) {
+        // Check if widget is still mounted before showing SnackBar
+        if (!mounted) return;
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Please enter your name'),
@@ -73,6 +76,9 @@ class _AuthScreenState extends State<AuthScreen> {
         displayName: _nameController.text.trim(),
       );
     }
+
+    // Check if widget is still mounted before showing error
+    if (!mounted) return;
 
     // Show error if authentication failed
     if (!success && authProvider.error != null) {
