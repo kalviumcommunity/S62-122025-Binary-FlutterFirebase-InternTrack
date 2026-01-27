@@ -1,3 +1,4 @@
+// lib/main.dart (UPDATED)
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
@@ -5,6 +6,7 @@ import 'firebase_options.dart';
 import 'app/app.dart';
 import 'providers/auth_provider.dart';
 import 'providers/internship_provider.dart';
+import 'providers/mentor_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +21,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => InternshipProvider()),
+        ChangeNotifierProvider(create: (_) => MentorProvider()),
       ],
       child: MyApp(),
     ),

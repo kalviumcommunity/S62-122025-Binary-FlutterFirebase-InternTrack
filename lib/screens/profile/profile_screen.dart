@@ -1,3 +1,4 @@
+// lib/screens/profile/profile_screen.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -29,15 +30,24 @@ class ProfileScreen extends StatelessWidget {
           ),
 
           SafeArea(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: _firestore
-                  .collection('internships')
-                  .where('studentId', isEqualTo: user?.uid)
-                  .where('isArchived', isEqualTo: false)
-                  .snapshots(),
+            child: StreamBuilder<Map<String, dynamic>>(
+              stream: _firestore.collection('users').doc(user?.uid).snapshots().asyncMap((userDoc) async {
+                final userRole = userDoc.data()?['role'] ?? 'student';
+                final internshipSnapshot = await _firestore
+                    .collection('internships')
+                    .where('studentId', isEqualTo: user?.uid)
+                    .where('isArchived', isEqualTo: false)
+                    .get();
+                final internships = internshipSnapshot.docs.map((doc) => Internship.fromFirestore(doc)).toList();
+                return {
+                  'role': userRole,
+                  'internships': internships,
+                };
+              }),
               builder: (context, snapshot) {
-                final internships = snapshot.hasData
-                    ? snapshot.data!.docs.map((doc) => Internship.fromFirestore(doc)).toList()
+                final userRole = snapshot.hasData ? snapshot.data!['role'] as String : 'student';
+                final internships = snapshot.hasData 
+                    ? List<Internship>.from(snapshot.data!['internships'] as List)
                     : <Internship>[];
 
                 return CustomScrollView(
@@ -131,7 +141,7 @@ class ProfileScreen extends StatelessWidget {
                               style: Theme.of(context).textTheme.headlineSmall,
                             ),
                             SizedBox(height: AppConstants.spaceM),
-                            _buildSettingsOptions(context, isDark),
+                            _buildSettingsOptions(context, isDark, userRole),
 
                             SizedBox(height: AppConstants.spaceXL),
                           ],
@@ -324,13 +334,24 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingsOptions(BuildContext context, bool isDark) {
+  Widget _buildSettingsOptions(BuildContext context, bool isDark, String userRole) {
     return Column(
       children: [
+        // Only show invite mentor for students
+        if (userRole == 'student') ...[
+          _buildSettingTile(
+            icon: Icons.person_add_outlined,
+            title: 'Invite Mentor',
+            onTap: () => Navigator.of(context, rootNavigator: true).pushNamed(AppRoutes.inviteMentor),
+            isDark: isDark,
+          ),
+          SizedBox(height: AppConstants.spaceM),
+        ],
+        
         _buildSettingTile(
           icon: Icons.archive_outlined,
           title: 'Archived Internships',
-          onTap: () => Navigator.pushNamed(context, AppRoutes.archivedInternships),
+          onTap: () => Navigator.of(context, rootNavigator: true).pushNamed(AppRoutes.archivedInternships),
           isDark: isDark,
         ),
         SizedBox(height: AppConstants.spaceM),
@@ -419,7 +440,7 @@ class ProfileScreen extends StatelessWidget {
     if (confirmed == true) {
       await _auth.signOut();
       if (context.mounted) {
-        Navigator.pushNamedAndRemoveUntil(context, AppRoutes.auth, (route) => false);
+        Navigator.of(context, rootNavigator: true).pushNamedAndRemoveUntil(AppRoutes.auth, (route) => false);
       }
     }
   }
