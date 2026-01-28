@@ -1,3 +1,4 @@
+// lib/screens/internships/internship_detail_screen.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/colors.dart';
@@ -7,6 +8,7 @@ import '../../core/widgets/gradient_orb.dart';
 import '../../models/internship_model.dart';
 import '../../app/app_routes.dart';
 import 'dart:ui';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class InternshipDetailScreen extends StatefulWidget {
   final Internship internship;
@@ -20,7 +22,9 @@ class InternshipDetailScreen extends StatefulWidget {
 class _InternshipDetailScreenState extends State<InternshipDetailScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _reflectionController = TextEditingController();
+  String _feedbackMessage = '';
   final TextEditingController _learningController = TextEditingController();
+  
   final List<String> _availableSkills = [
     'Communication',
     'Leadership',
@@ -98,6 +102,7 @@ class _InternshipDetailScreenState extends State<InternshipDetailScreen> {
     }
   }
 
+
   Future<void> _saveReflection() async {
     try {
       await _firestore.collection('internships').doc(widget.internship.id).update({
@@ -117,6 +122,108 @@ class _InternshipDetailScreenState extends State<InternshipDetailScreen> {
       }
     }
   }
+
+  
+void _requestMentorFeedback() {
+  final emailCtrl = TextEditingController();
+  final messageCtrl = TextEditingController();
+
+  showDialog(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: const Text('Request Mentor Feedback'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: emailCtrl,
+            decoration: const InputDecoration(labelText: 'Mentor Email'),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: messageCtrl,
+            maxLines: 3,
+            decoration: const InputDecoration(labelText: 'Message'),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+
+        ElevatedButton(
+          onPressed: () async {
+            final mentorQuery = await FirebaseFirestore.instance
+                .collection('users')
+                .where('email', isEqualTo: emailCtrl.text.trim())
+                .where('role', isEqualTo: 'mentor')
+                .limit(1)
+                .get();
+
+            if (mentorQuery.docs.isEmpty) {
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(const SnackBar(content: Text('Mentor not found')));
+              return;
+            }
+
+            final mentorId = mentorQuery.docs.first.id;
+            final student = FirebaseAuth.instance.currentUser!;
+
+            await FirebaseFirestore.instance.collection('feedbackRequests').add({
+              'mentorId': mentorId,
+              'studentId': student.uid,
+               'studentName': FirebaseAuth.instance.currentUser!.displayName ?? "Student",
+  'company': widget.internship.company,
+              'internshipId': widget.internship.id,
+              'message': messageCtrl.text.trim(),
+              'status': 'pending',
+              'createdAt': Timestamp.now(),
+            });
+
+            Navigator.pop(context);
+
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (_) => AlertDialog(
+                backgroundColor: AppColors.purplePrimary,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18)),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.check_circle_outline,
+                        size: 48, color: Colors.white),
+                    SizedBox(height: 12),
+                    Text(
+                      "Request sent to mentor",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+
+            Future.delayed(const Duration(seconds: 2), () {
+              Navigator.pop(context);
+            });
+          },
+          child: const Text('Send'),
+        ),
+      ],
+    ),
+  );
+}
+
+
+
+
 
   Future<void> _saveLearning() async {
     try {
@@ -142,8 +249,28 @@ class _InternshipDetailScreenState extends State<InternshipDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
+    
+      return Scaffold(
+  bottomNavigationBar: Padding(
+    padding: const EdgeInsets.all(16),
+    child: SizedBox(
+      height: 52,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.purplePrimary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        onPressed: _requestMentorFeedback,
+        child: const Text(
+          "Request Mentor Feedback",
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white,),
+          
+        ),
+      ),
+    ),
+  ),
       body: Stack(
         children: [
           GradientOrb(
@@ -292,6 +419,10 @@ class _InternshipDetailScreenState extends State<InternshipDetailScreen> {
                             ],
                           ),
                         ),
+//                         ElevatedButton(
+//   onPressed: _requestMentorFeedback,
+//   child: const Text('Request Mentor Feedback'),
+// ),  
 
                         SizedBox(height: AppConstants.spaceL),
 
@@ -323,6 +454,72 @@ class _InternshipDetailScreenState extends State<InternshipDetailScreen> {
                         ),
                         SizedBox(height: AppConstants.spaceM),
                         _buildLearningSection(isDark),
+                        SizedBox(height: AppConstants.spaceL),
+StreamBuilder(
+  stream: FirebaseFirestore.instance
+      .collection('feedbackRequests')
+      .where('internshipId', isEqualTo: widget.internship.id)
+      .where('status', isEqualTo: 'completed')
+      .snapshots(),
+  builder: (context, snapshot) {
+    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) return SizedBox();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Mentor Feedback", style: Theme.of(context).textTheme.headlineSmall),
+        SizedBox(height: 12),
+
+       GlassContainer(
+  isDark: isDark,
+  padding: EdgeInsets.all(16),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: snapshot.data!.docs.map((doc) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+
+            Text(
+              "You:",
+              style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.pureWhite : AppColors.pureBlack,
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(  (doc.data() as Map<String, dynamic>)['message'] ??
+  (doc.data() as Map<String, dynamic>)['studentMessage'] ??
+  '',),
+
+            const SizedBox(height: 8),
+
+            Text(
+              "Mentor:",
+              style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.pureWhite : AppColors.pureBlack,
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(doc['mentorFeedback'] ?? ''),
+
+            const Divider(height: 24),
+          ],
+        ),
+      );
+    }).toList(),
+  ),
+),
+
+      ],
+    );
+  },
+),
 
                         SizedBox(height: AppConstants.spaceXL),
                       ],

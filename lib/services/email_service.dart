@@ -1,11 +1,14 @@
 // lib/services/email_service.dart
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class EmailService {
   // Replace with your SendGrid API key
-  static const String _sendGridApiKey = ''
-;
+final String _sendGridApiKey = dotenv.env['SENDGRID_API_KEY']!;
+final String _senderEmail = dotenv.env['SENDGRID_SENDER_EMAIL']!;
+final String _senderName = dotenv.env['SENDGRID_SENDER_NAME']!;
+
   static const String _sendGridEndpoint = 'https://api.sendgrid.com/v3/mail/send';
   
 
@@ -25,8 +28,8 @@ class EmailService {
           }
         ],
         'from': {
-          'email': 'varshavpanda@gmail.com', // Replace with your verified sender
-          'name': 'InternTrack'
+          'email':  _senderEmail,
+          'name': _senderName
         },
         'content': [
           {

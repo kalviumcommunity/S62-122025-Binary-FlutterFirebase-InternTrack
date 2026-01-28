@@ -14,6 +14,8 @@ import '../screens/mentor/mentor_students_screen.dart';
 import '../screens/mentor/mentor_student_detail_screen.dart';
 import '../screens/mentor/mentor_internship_detail_screen.dart';
 import '../screens/profile/profile_screen.dart';
+import '../screens/profile/mentor_profile_screen.dart';
+
 
 class AppRoutes {
   // Common routes
@@ -35,6 +37,7 @@ class AppRoutes {
   static const String mentorStudents = '/mentor-students';
   static const String mentorStudentDetail = '/mentor-student-detail';
   static const String mentorInternshipDetail = '/mentor-internship-detail';
+  static const String mentorProfile = '/mentor-profile'; 
 
   static Map<String, WidgetBuilder> routes = {
     onboarding: (context) => OnboardingScreen(),
@@ -47,6 +50,7 @@ class AppRoutes {
     inviteMentor: (context) => InviteMentorScreen(),
     mentorStudents: (context) => MentorStudentsScreen(),
     profile: (context) => ProfileScreen(),
+    mentorProfile: (context) => MentorProfileScreen(),
   };
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {

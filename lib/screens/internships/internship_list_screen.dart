@@ -257,105 +257,138 @@ class _InternshipListScreenState extends State<InternshipListScreen> {
     );
   }
 
-  Widget _buildInternshipCard(Internship internship, bool isDark) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: AppConstants.spaceM),
-      child: GestureDetector(
-        onTap: () {
-          // FIXED: Use root navigator
-          Navigator.of(context, rootNavigator: true).pushNamed(
-            AppRoutes.internshipDetail,
-            arguments: {'internship': internship},
-          );
-        },
-        child: GlassContainer(
-          isDark: isDark,
-          padding: EdgeInsets.all(AppConstants.spaceM),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [AppColors.purplePrimary, AppColors.purpleLight],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: Text(
-                        internship.company.substring(0, 1).toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+ Widget _buildInternshipCard(Internship internship, bool isDark) {
+  return StreamBuilder<QuerySnapshot>(
+    stream: FirebaseFirestore.instance
+        .collection('feedbackRequests')
+        .where('internshipId', isEqualTo: internship.id)
+        .limit(1)
+        .snapshots(),
+    builder: (context, snapshot) {
+      final reviewed = snapshot.hasData && snapshot.data!.docs.isNotEmpty;
+
+      return Padding(
+        padding: EdgeInsets.only(bottom: AppConstants.spaceM),
+        child: GestureDetector(
+          onTap: () {
+            Navigator.of(context, rootNavigator: true).pushNamed(
+              AppRoutes.internshipDetail,
+              arguments: {'internship': internship},
+            );
+          },
+          child: GlassContainer(
+            isDark: isDark,
+            padding: EdgeInsets.all(AppConstants.spaceM),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [AppColors.purplePrimary, AppColors.purpleLight],
                         ),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ),
-                  ),
-                  SizedBox(width: AppConstants.spaceM),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          internship.company,
+                      child: Center(
+                        child: Text(
+                          internship.company.substring(0, 1).toUpperCase(),
                           style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? AppColors.pureWhite : AppColors.pureBlack,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
                           ),
                         ),
-                        SizedBox(height: 4),
-                        Text(
-                          internship.role,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.mediumGray,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  _buildPriorityBadge(internship.priority),
-                ],
-              ),
-              SizedBox(height: AppConstants.spaceM),
-              Row(
-                children: [
-                  _buildStatusBadge(internship.status),
-                  if (internship.location != null) ...[
-                    SizedBox(width: AppConstants.spaceS),
-                    Icon(Icons.location_on_outlined, size: 16, color: AppColors.mediumGray),
-                    SizedBox(width: 4),
-                    Text(
-                      internship.location!,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.mediumGray,
                       ),
                     ),
+
+                    SizedBox(width: AppConstants.spaceM),
+
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                internship.company,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark
+                                      ? AppColors.pureWhite
+                                      : AppColors.pureBlack,
+                                ),
+                              ),
+
+                              if (reviewed) ...[
+                                SizedBox(width: 6),
+                                Icon(Icons.check_circle,
+                                    size: 16, color: Colors.green),
+                              ]
+                            ],
+                          ),
+
+                          SizedBox(height: 4),
+
+                          Text(
+                            internship.role,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors.mediumGray,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    _buildPriorityBadge(internship.priority),
                   ],
-                  Spacer(),
-                  if (internship.deadline != null)
-                    Text(
-                      'Due: ${_formatDate(internship.deadline!)}',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.mediumGray,
+                ),
+
+                SizedBox(height: AppConstants.spaceM),
+
+                Row(
+                  children: [
+                    _buildStatusBadge(internship.status),
+
+                    if (internship.location != null) ...[
+                      SizedBox(width: AppConstants.spaceS),
+                      Icon(Icons.location_on_outlined,
+                          size: 16, color: AppColors.mediumGray),
+                      SizedBox(width: 4),
+                      Text(
+                        internship.location!,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.mediumGray,
+                        ),
                       ),
-                    ),
-                ],
-              ),
-            ],
+                    ],
+
+                    Spacer(),
+
+                    if (internship.deadline != null)
+                      Text(
+                        'Due: ${_formatDate(internship.deadline!)}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.mediumGray,
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
-  }
+      );
+    },
+  );
+}
 
   Widget _buildStatusBadge(InternshipStatus status) {
     Color color;

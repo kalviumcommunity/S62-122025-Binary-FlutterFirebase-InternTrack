@@ -11,6 +11,10 @@ import '../../providers/mentor_provider.dart';
 import '../mentor/mentor_students_screen.dart';
 import '../profile/profile_screen.dart';
 import 'dart:ui';
+import '../profile/mentor_profile_screen.dart';
+import '../mentor/mentor_requests_screen.dart';
+
+
 
 class MentorDashboard extends StatefulWidget {
   @override
@@ -20,17 +24,16 @@ class MentorDashboard extends StatefulWidget {
 class _MentorDashboardState extends State<MentorDashboard> {
   int _selectedIndex = 0;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+@override
+void didChangeDependencies() {
+  super.didChangeDependencies();
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final user = _auth.currentUser;
-      if (user != null) {
-        context.read<MentorProvider>().initializeStudentsStream(user.uid);
-      }
-    });
+  final user = _auth.currentUser;
+  if (user != null) {
+    context.read<MentorProvider>().initializeStudentsStream(user.uid);
+    context.read<MentorProvider>().initializeRequests(user.uid);
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +45,7 @@ class _MentorDashboardState extends State<MentorDashboard> {
         children: [
           _buildDashboardHome(isDark),
           _buildStudentsView(),
+          MentorRequestsScreen(),
           _buildProfileView(),
         ],
       ),
@@ -280,15 +284,15 @@ class _MentorDashboardState extends State<MentorDashboard> {
     );
   }
 
-  Widget _buildProfileView() {
-    return Navigator(
-      onGenerateRoute: (settings) {
-        return MaterialPageRoute(
-          builder: (context) => ProfileScreen(),
-        );
-      },
-    );
-  }
+ Widget _buildProfileView() {
+  return Navigator(
+    onGenerateRoute: (settings) {
+      return MaterialPageRoute(
+        builder: (context) => MentorProfileScreen(),
+      );
+    },
+  );
+}
 
   Widget _buildBottomNav(bool isDark) {
     return ClipRRect(
@@ -328,10 +332,49 @@ class _MentorDashboardState extends State<MentorDashboard> {
                 index: 1,
                 isDark: isDark,
               ),
+               Consumer<MentorProvider>(
+  builder: (context, provider, _) {
+    final count = provider.requests.length;
+
+    return Stack(
+      children: [
+        _buildNavItem(
+          icon: Icons.mark_chat_unread_outlined,
+          label: 'Requests',
+          index: 2,
+          isDark: isDark,
+        ),
+
+        if (count > 0)
+          Positioned(
+            right: 6,
+            top: 2,
+            child: Container(
+              padding: EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                count.toString(),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  },
+),
+
+
               _buildNavItem(
                 icon: Icons.person_outline_rounded,
                 label: 'Profile',
-                index: 2,
+                index: 3,
                 isDark: isDark,
               ),
             ],
@@ -349,8 +392,18 @@ class _MentorDashboardState extends State<MentorDashboard> {
   }) {
     final isSelected = _selectedIndex == index;
 
-    return GestureDetector(
-      onTap: () => setState(() => _selectedIndex = index),
+    
+      return GestureDetector(
+  onTap: () {
+    setState(() => _selectedIndex = index);
+
+    if (index == 2) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        context.read<MentorProvider>().initializeRequests(user.uid);
+      }
+    }
+  },
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(

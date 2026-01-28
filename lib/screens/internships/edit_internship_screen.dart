@@ -1,3 +1,4 @@
+// lib/screens/internships/edit_internship_screen.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/colors.dart';
