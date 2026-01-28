@@ -1,3 +1,4 @@
+// internship_provider.dart
 import 'package:flutter/material.dart';
 import '../models/internship_model.dart';
 import '../services/internship_service.dart';

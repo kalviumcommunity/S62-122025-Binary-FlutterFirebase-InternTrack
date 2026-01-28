@@ -4,6 +4,7 @@ import '../models/mentor_invitation_model.dart';
 import '../models/internship_model.dart';
 import '../services/mentor_service.dart';
 import '../services/email_service.dart';
+import '../models/feedback_request_model.dart';
 
 class MentorProvider extends ChangeNotifier {
   final MentorService _mentorService = MentorService();
@@ -20,7 +21,17 @@ class MentorProvider extends ChangeNotifier {
   MentorStudentLink? get selectedStudent => _selectedStudent;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  int get totalInternships => _selectedStudentInternships.length;
 
+List<FeedbackRequest> _requests = [];
+List<FeedbackRequest> get requests => _requests;
+
+void initializeRequests(String mentorId) {
+  _mentorService.getMentorRequests(mentorId).listen((data) {
+    _requests = data;
+    notifyListeners();
+  });
+}
   // Initialize mentor's students stream
   void initializeStudentsStream(String mentorId) {
     _isLoading = true;

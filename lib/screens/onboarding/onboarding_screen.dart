@@ -1,3 +1,4 @@
+// lib/screens/onboarding/onboarding_screen.dart
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
