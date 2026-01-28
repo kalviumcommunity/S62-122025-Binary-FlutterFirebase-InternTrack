@@ -10,6 +10,7 @@ import '../../core/widgets/glass_text_field.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/constants/colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../app/app_routes.dart';
 
 class AuthScreen extends StatefulWidget {
   @override
@@ -78,11 +79,21 @@ class _AuthScreenState extends State<AuthScreen> {
       );
     }
 
-    // Check if widget is still mounted before showing error
+    // Check if widget is still mounted before proceeding
     if (!mounted) return;
 
-    // Show error if authentication failed
-    if (!success && authProvider.error != null) {
+    // Navigate to dashboard on success
+    if (success && authProvider.currentUser != null) {
+      final user = authProvider.currentUser!;
+      
+      // Navigate based on role
+      if (user.role == 'mentor') {
+        Navigator.pushReplacementNamed(context, AppRoutes.mentorDashboard);
+      } else {
+        Navigator.pushReplacementNamed(context, AppRoutes.studentDashboard);
+      }
+    } else if (!success && authProvider.error != null) {
+      // Show error if authentication failed
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(authProvider.error!),
