@@ -262,10 +262,13 @@ class _InternshipListScreenState extends State<InternshipListScreen> {
     stream: FirebaseFirestore.instance
         .collection('feedbackRequests')
         .where('internshipId', isEqualTo: internship.id)
-        .limit(1)
         .snapshots(),
     builder: (context, snapshot) {
-      final reviewed = snapshot.hasData && snapshot.data!.docs.isNotEmpty;
+      final hasFeedback = snapshot.hasData &&
+          snapshot.data!.docs.any((doc) {
+            final status = doc['status'] as String?;
+            return status == 'completed';
+          });
 
       return Padding(
         padding: EdgeInsets.only(bottom: AppConstants.spaceM),
@@ -311,25 +314,15 @@ class _InternshipListScreenState extends State<InternshipListScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Text(
-                                internship.company,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: isDark
-                                      ? AppColors.pureWhite
-                                      : AppColors.pureBlack,
-                                ),
-                              ),
-
-                              if (reviewed) ...[
-                                SizedBox(width: 6),
-                                Icon(Icons.check_circle,
-                                    size: 16, color: Colors.green),
-                              ]
-                            ],
+                          Text(
+                            internship.company,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: isDark
+                                  ? AppColors.pureWhite
+                                  : AppColors.pureBlack,
+                            ),
                           ),
 
                           SizedBox(height: 4),

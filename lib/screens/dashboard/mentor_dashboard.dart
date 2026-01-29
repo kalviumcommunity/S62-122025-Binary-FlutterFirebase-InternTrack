@@ -1,4 +1,5 @@
 // lib/screens/dashboard/mentor_dashboard.dart
+// FIXED: Removed setState during build
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
@@ -14,8 +15,6 @@ import 'dart:ui';
 import '../profile/mentor_profile_screen.dart';
 import '../mentor/mentor_requests_screen.dart';
 
-
-
 class MentorDashboard extends StatefulWidget {
   @override
   State<MentorDashboard> createState() => _MentorDashboardState();
@@ -24,16 +23,27 @@ class MentorDashboard extends StatefulWidget {
 class _MentorDashboardState extends State<MentorDashboard> {
   int _selectedIndex = 0;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-@override
-void didChangeDependencies() {
-  super.didChangeDependencies();
+  bool _initialized = false;
 
-  final user = _auth.currentUser;
-  if (user != null) {
-    context.read<MentorProvider>().initializeStudentsStream(user.uid);
-    context.read<MentorProvider>().initializeRequests(user.uid);
+  @override
+  void initState() {
+    super.initState();
+    // Initialize in initState instead of didChangeDependencies
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeData();
+    });
   }
-}
+
+  void _initializeData() {
+    if (!_initialized && mounted) {
+      final user = _auth.currentUser;
+      if (user != null) {
+        context.read<MentorProvider>().initializeStudentsStream(user.uid);
+        context.read<MentorProvider>().initializeRequests(user.uid);
+        setState(() => _initialized = true);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -284,15 +294,15 @@ void didChangeDependencies() {
     );
   }
 
- Widget _buildProfileView() {
-  return Navigator(
-    onGenerateRoute: (settings) {
-      return MaterialPageRoute(
-        builder: (context) => MentorProfileScreen(),
-      );
-    },
-  );
-}
+  Widget _buildProfileView() {
+    return Navigator(
+      onGenerateRoute: (settings) {
+        return MaterialPageRoute(
+          builder: (context) => MentorProfileScreen(),
+        );
+      },
+    );
+  }
 
   Widget _buildBottomNav(bool isDark) {
     return ClipRRect(
@@ -332,45 +342,43 @@ void didChangeDependencies() {
                 index: 1,
                 isDark: isDark,
               ),
-               Consumer<MentorProvider>(
-  builder: (context, provider, _) {
-    final count = provider.requests.length;
+              Consumer<MentorProvider>(
+                builder: (context, provider, _) {
+                  final count = provider.requests.length;
 
-    return Stack(
-      children: [
-        _buildNavItem(
-          icon: Icons.mark_chat_unread_outlined,
-          label: 'Requests',
-          index: 2,
-          isDark: isDark,
-        ),
+                  return Stack(
+                    children: [
+                      _buildNavItem(
+                        icon: Icons.mark_chat_unread_outlined,
+                        label: 'Requests',
+                        index: 2,
+                        isDark: isDark,
+                      ),
 
-        if (count > 0)
-          Positioned(
-            right: 6,
-            top: 2,
-            child: Container(
-              padding: EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
+                      if (count > 0)
+                        Positioned(
+                          right: 6,
+                          top: 2,
+                          child: Container(
+                            padding: EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              count.toString(),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
               ),
-              child: Text(
-                count.toString(),
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  },
-),
-
-
               _buildNavItem(
                 icon: Icons.person_outline_rounded,
                 label: 'Profile',
@@ -392,18 +400,20 @@ void didChangeDependencies() {
   }) {
     final isSelected = _selectedIndex == index;
 
-    
-      return GestureDetector(
-  onTap: () {
-    setState(() => _selectedIndex = index);
+    return GestureDetector(
+      onTap: () {
+        setState(() => _selectedIndex = index);
 
-    if (index == 2) {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        context.read<MentorProvider>().initializeRequests(user.uid);
-      }
-    }
-  },
+        // Refresh requests when switching to requests tab
+        if (index == 2 && !_initialized) {
+          final user = FirebaseAuth.instance.currentUser;
+          if (user != null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              context.read<MentorProvider>().initializeRequests(user.uid);
+            });
+          }
+        }
+      },
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(

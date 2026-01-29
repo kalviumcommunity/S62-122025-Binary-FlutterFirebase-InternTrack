@@ -51,10 +51,10 @@ class AuthService {
       if (role == 'mentor' && invitation != null) {
         await _mentorService.createMentorLink(
           mentorId: user.uid,
-          studentId: invitation.studentId,
-          studentName: invitation.studentName,
-          studentEmail: invitation.studentEmail,
-          inviteId: invitation.id,
+          studentId: invitation['studentId'] as String,
+          studentName: invitation['studentName'] as String,
+          studentEmail: invitation['studentEmail'] as String,
+          inviteId: invitation['id'] as String,
         );
       }
 

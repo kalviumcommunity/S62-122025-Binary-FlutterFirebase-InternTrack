@@ -1,4 +1,3 @@
-// lib/screens/internships/internship_detail_screen.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/colors.dart';
@@ -7,6 +6,7 @@ import '../../core/widgets/glass_container.dart';
 import '../../core/widgets/gradient_orb.dart';
 import '../../models/internship_model.dart';
 import '../../app/app_routes.dart';
+import '../feedback/widget/mentor_feedback_widget.dart';
 import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -22,7 +22,6 @@ class InternshipDetailScreen extends StatefulWidget {
 class _InternshipDetailScreenState extends State<InternshipDetailScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _reflectionController = TextEditingController();
-  String _feedbackMessage = '';
   final TextEditingController _learningController = TextEditingController();
   
   final List<String> _availableSkills = [
@@ -102,7 +101,6 @@ class _InternshipDetailScreenState extends State<InternshipDetailScreen> {
     }
   }
 
-
   Future<void> _saveReflection() async {
     try {
       await _firestore.collection('internships').doc(widget.internship.id).update({
@@ -122,108 +120,6 @@ class _InternshipDetailScreenState extends State<InternshipDetailScreen> {
       }
     }
   }
-
-  
-void _requestMentorFeedback() {
-  final emailCtrl = TextEditingController();
-  final messageCtrl = TextEditingController();
-
-  showDialog(
-    context: context,
-    builder: (_) => AlertDialog(
-      title: const Text('Request Mentor Feedback'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: emailCtrl,
-            decoration: const InputDecoration(labelText: 'Mentor Email'),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: messageCtrl,
-            maxLines: 3,
-            decoration: const InputDecoration(labelText: 'Message'),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-
-        ElevatedButton(
-          onPressed: () async {
-            final mentorQuery = await FirebaseFirestore.instance
-                .collection('users')
-                .where('email', isEqualTo: emailCtrl.text.trim())
-                .where('role', isEqualTo: 'mentor')
-                .limit(1)
-                .get();
-
-            if (mentorQuery.docs.isEmpty) {
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(const SnackBar(content: Text('Mentor not found')));
-              return;
-            }
-
-            final mentorId = mentorQuery.docs.first.id;
-            final student = FirebaseAuth.instance.currentUser!;
-
-            await FirebaseFirestore.instance.collection('feedbackRequests').add({
-              'mentorId': mentorId,
-              'studentId': student.uid,
-               'studentName': FirebaseAuth.instance.currentUser!.displayName ?? "Student",
-  'company': widget.internship.company,
-              'internshipId': widget.internship.id,
-              'message': messageCtrl.text.trim(),
-              'status': 'pending',
-              'createdAt': Timestamp.now(),
-            });
-
-            Navigator.pop(context);
-
-            showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (_) => AlertDialog(
-                backgroundColor: AppColors.purplePrimary,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18)),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(Icons.check_circle_outline,
-                        size: 48, color: Colors.white),
-                    SizedBox(height: 12),
-                    Text(
-                      "Request sent to mentor",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-
-            Future.delayed(const Duration(seconds: 2), () {
-              Navigator.pop(context);
-            });
-          },
-          child: const Text('Send'),
-        ),
-      ],
-    ),
-  );
-}
-
-
-
-
 
   Future<void> _saveLearning() async {
     try {
@@ -250,27 +146,7 @@ void _requestMentorFeedback() {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
-      return Scaffold(
-  bottomNavigationBar: Padding(
-    padding: const EdgeInsets.all(16),
-    child: SizedBox(
-      height: 52,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.purplePrimary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-        ),
-        onPressed: _requestMentorFeedback,
-        child: const Text(
-          "Request Mentor Feedback",
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white,),
-          
-        ),
-      ),
-    ),
-  ),
+    return Scaffold(
       body: Stack(
         children: [
           GradientOrb(
@@ -419,14 +295,30 @@ void _requestMentorFeedback() {
                             ],
                           ),
                         ),
-//                         ElevatedButton(
-//   onPressed: _requestMentorFeedback,
-//   child: const Text('Request Mentor Feedback'),
-// ),  
 
                         SizedBox(height: AppConstants.spaceL),
 
-                        // Timeline
+                        if (widget.internship.description != null) ...[
+                          Text(
+                            'Description',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                          SizedBox(height: AppConstants.spaceM),
+                          GlassContainer(
+                            isDark: isDark,
+                            padding: EdgeInsets.all(AppConstants.spaceM),
+                            child: Text(
+                              widget.internship.description!,
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: isDark ? AppColors.pureWhite : AppColors.pureBlack,
+                                height: 1.5,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: AppConstants.spaceL),
+                        ],
+
                         if (widget.internship.timeline.isNotEmpty) ...[
                           Text(
                             'Timeline',
@@ -437,7 +329,6 @@ void _requestMentorFeedback() {
                           SizedBox(height: AppConstants.spaceL),
                         ],
 
-                        // Reflection Notes
                         Text(
                           'Personal Reflections',
                           style: Theme.of(context).textTheme.headlineSmall,
@@ -447,79 +338,21 @@ void _requestMentorFeedback() {
 
                         SizedBox(height: AppConstants.spaceL),
 
-                        // Learning Outcomes
                         Text(
                           'Learning & Growth',
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                         SizedBox(height: AppConstants.spaceM),
                         _buildLearningSection(isDark),
+                        
                         SizedBox(height: AppConstants.spaceL),
-StreamBuilder(
-  stream: FirebaseFirestore.instance
-      .collection('feedbackRequests')
-      .where('internshipId', isEqualTo: widget.internship.id)
-      .where('status', isEqualTo: 'completed')
-      .snapshots(),
-  builder: (context, snapshot) {
-    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) return SizedBox();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("Mentor Feedback", style: Theme.of(context).textTheme.headlineSmall),
-        SizedBox(height: 12),
-
-       GlassContainer(
-  isDark: isDark,
-  padding: EdgeInsets.all(16),
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: snapshot.data!.docs.map((doc) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-
-            Text(
-              "You:",
-              style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? AppColors.pureWhite : AppColors.pureBlack,
-                  ),
-            ),
-            const SizedBox(height: 4),
-            Text(  (doc.data() as Map<String, dynamic>)['message'] ??
-  (doc.data() as Map<String, dynamic>)['studentMessage'] ??
-  '',),
-
-            const SizedBox(height: 8),
-
-            Text(
-              "Mentor:",
-              style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? AppColors.pureWhite : AppColors.pureBlack,
-                  ),
-            ),
-            const SizedBox(height: 4),
-            Text(doc['mentorFeedback'] ?? ''),
-
-            const Divider(height: 24),
-          ],
-        ),
-      );
-    }).toList(),
-  ),
-),
-
-      ],
-    );
-  },
-),
+                        // UPDATED: Replace old feedback section with new widget
+                        MentorFeedbackWidget(
+                          internshipId: widget.internship.id,
+                          internshipCompany: widget.internship.company,
+                          isDark: isDark,
+                        ),
 
                         SizedBox(height: AppConstants.spaceXL),
                       ],
@@ -534,6 +367,7 @@ StreamBuilder(
     );
   }
 
+  // All the existing helper methods remain the same...
   Widget _buildTimeline(bool isDark) {
     return GlassContainer(
       isDark: isDark,
@@ -735,7 +569,6 @@ StreamBuilder(
           ),
           SizedBox(height: AppConstants.spaceM),
           
-          // Skills
           Text(
             'Skills Gained',
             style: TextStyle(
@@ -826,7 +659,6 @@ StreamBuilder(
           
           SizedBox(height: AppConstants.spaceM),
           
-          // Learning Outcomes
           Text(
             'What I Learned',
             style: TextStyle(
