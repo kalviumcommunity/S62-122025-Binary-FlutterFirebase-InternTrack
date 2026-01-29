@@ -15,7 +15,7 @@ import '../screens/mentor/mentor_student_detail_screen.dart';
 import '../screens/mentor/mentor_internship_detail_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/profile/mentor_profile_screen.dart';
-
+import '../screens/profile/mentorship_management_screen.dart';
 
 class AppRoutes {
   // Common routes
@@ -31,6 +31,7 @@ class AppRoutes {
   static const String internshipDetail = '/internship-detail';
   static const String archivedInternships = '/archived-internships';
   static const String inviteMentor = '/invite-mentor';
+  static const String mentorshipManagement = '/mentorship-management';
   
   // Mentor routes
   static const String mentorDashboard = '/mentor-dashboard';
@@ -48,6 +49,7 @@ class AppRoutes {
     addInternship: (context) => AddInternshipScreen(),
     archivedInternships: (context) => ArchivedInternshipsScreen(),
     inviteMentor: (context) => InviteMentorScreen(),
+    mentorshipManagement: (context) => MentorshipManagementScreen(),
     mentorStudents: (context) => MentorStudentsScreen(),
     profile: (context) => ProfileScreen(),
     mentorProfile: (context) => MentorProfileScreen(),

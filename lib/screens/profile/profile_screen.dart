@@ -31,24 +31,17 @@ class ProfileScreen extends StatelessWidget {
 
           SafeArea(
             child: StreamBuilder<Map<String, dynamic>>(
-              stream: _firestore.collection('users').doc(user?.uid).snapshots().asyncMap((userDoc) async {
-                final userRole = userDoc.data()?['role'] ?? 'student';
-                final internshipSnapshot = await _firestore
-                    .collection('internships')
-                    .where('studentId', isEqualTo: user?.uid)
-                    .where('isArchived', isEqualTo: false)
-                    .get();
-                final internships = internshipSnapshot.docs.map((doc) => Internship.fromFirestore(doc)).toList();
-                return {
-                  'role': userRole,
-                  'internships': internships,
-                };
-              }),
+              stream: _getProfileDataStream(user?.uid),
               builder: (context, snapshot) {
-                final userRole = snapshot.hasData ? snapshot.data!['role'] as String : 'student';
-                final internships = snapshot.hasData 
-                    ? List<Internship>.from(snapshot.data!['internships'] as List)
-                    : <Internship>[];
+                if (!snapshot.hasData) {
+                  return Center(child: CircularProgressIndicator());
+                }
+
+                final data = snapshot.data!;
+                final userRole = data['role'] as String;
+                final internships = data['internships'] as List<Internship>;
+                final mentorCount = data['mentorCount'] as int;
+                final pendingInvitesCount = data['pendingInvitesCount'] as int;
 
                 return CustomScrollView(
                   slivers: [
@@ -58,6 +51,7 @@ class ProfileScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Header
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -65,72 +59,38 @@ class ProfileScreen extends StatelessWidget {
                                   'Profile',
                                   style: Theme.of(context).textTheme.displayMedium,
                                 ),
-                                ThemeToggle(),
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      onPressed: () => _signOut(context),
+                                      icon: Icon(Icons.logout_rounded),
+                                      tooltip: 'Sign Out',
+                                    ),
+                                    SizedBox(width: AppConstants.spaceS),
+                                    ThemeToggle(),
+                                  ],
+                                ),
                               ],
                             ),
 
                             SizedBox(height: AppConstants.spaceXL),
 
-                            // Profile Card
-                            GlassContainer(
-                              isDark: isDark,
-                              padding: EdgeInsets.all(AppConstants.spaceL),
-                              child: Column(
-                                children: [
-                                  Container(
-                                    width: 80,
-                                    height: 80,
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [AppColors.purplePrimary, AppColors.purpleLight],
-                                      ),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        user?.email?.substring(0, 1).toUpperCase() ?? 'U',
-                                        style: TextStyle(
-                                          fontSize: 36,
-                                          fontWeight: FontWeight.w700,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(height: AppConstants.spaceM),
-                                  Text(
-                                    user?.email ?? 'User',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w600,
-                                      color: isDark ? AppColors.pureWhite : AppColors.pureBlack,
-                                    ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    'Student',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      color: AppColors.mediumGray,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                            // Identity Section
+                            _buildIdentitySection(user, isDark),
 
                             SizedBox(height: AppConstants.spaceXL),
 
-                            // Stats
-                            Text(
-                              'Your Progress',
-                              style: Theme.of(context).textTheme.headlineSmall,
-                            ),
-                            SizedBox(height: AppConstants.spaceM),
-                            _buildStatsGrid(internships, isDark),
+                            // Resume Section
+                            _buildResumeSection(isDark),
 
                             SizedBox(height: AppConstants.spaceXL),
 
-                            // Skills Summary
+                            // Mentorship Summary Section
+                            _buildMentorshipSummary(context, mentorCount, pendingInvitesCount, isDark),
+
+                            SizedBox(height: AppConstants.spaceXL),
+
+                            // Skills Section
                             _buildSkillsSummary(internships, isDark),
 
                             SizedBox(height: AppConstants.spaceXL),
@@ -138,7 +98,11 @@ class ProfileScreen extends StatelessWidget {
                             // Settings
                             Text(
                               'Settings',
-                              style: Theme.of(context).textTheme.headlineSmall,
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? AppColors.pureWhite : AppColors.pureBlack,
+                              ),
                             ),
                             SizedBox(height: AppConstants.spaceM),
                             _buildSettingsOptions(context, isDark, userRole),
@@ -158,99 +122,276 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsGrid(List<Internship> internships, bool isDark) {
-    final totalApplied = internships.length;
-    final totalAccepted = internships.where((i) => i.status == InternshipStatus.accepted).length;
-    final totalOffered = internships.where((i) => i.status == InternshipStatus.offered).length;
-    final totalRejected = internships.where((i) => i.status == InternshipStatus.rejected).length;
+  Stream<Map<String, dynamic>> _getProfileDataStream(String? uid) async* {
+    if (uid == null) {
+      yield {
+        'role': 'student',
+        'internships': <Internship>[],
+        'mentorCount': 0,
+        'pendingInvitesCount': 0,
+      };
+      return;
+    }
 
+    await for (var _ in _firestore.collection('users').doc(uid).snapshots()) {
+      final userDoc = await _firestore.collection('users').doc(uid).get();
+      final userRole = userDoc.data()?['role'] ?? 'student';
+      
+      // Get internships for skills
+      final internshipSnapshot = await _firestore
+          .collection('internships')
+          .where('studentId', isEqualTo: uid)
+          .where('isArchived', isEqualTo: false)
+          .get();
+      final internships = internshipSnapshot.docs
+          .map((doc) => Internship.fromFirestore(doc))
+          .toList();
+
+      // Get mentor count
+      final mentorLinksSnapshot = await _firestore
+          .collection('mentorStudentLinks')
+          .where('studentId', isEqualTo: uid)
+          .get();
+      final mentorCount = mentorLinksSnapshot.docs.length;
+
+      // Get pending invites count
+      final pendingInvitesSnapshot = await _firestore
+          .collection('mentorInvites')
+          .where('studentId', isEqualTo: uid)
+          .where('status', isEqualTo: 'pending')
+          .get();
+      final pendingInvitesCount = pendingInvitesSnapshot.docs.length;
+
+      yield {
+        'role': userRole,
+        'internships': internships,
+        'mentorCount': mentorCount,
+        'pendingInvitesCount': pendingInvitesCount,
+      };
+    }
+  }
+
+  Widget _buildIdentitySection(User? user, bool isDark) {
+    return GlassContainer(
+      isDark: isDark,
+      padding: EdgeInsets.all(AppConstants.spaceL),
+      child: Column(
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.purplePrimary, AppColors.purpleLight],
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                user?.email?.substring(0, 1).toUpperCase() ?? 'U',
+                style: TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: AppConstants.spaceM),
+          Text(
+            user?.email ?? 'User',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: isDark ? AppColors.pureWhite : AppColors.pureBlack,
+            ),
+          ),
+          SizedBox(height: 4),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.purplePrimary, AppColors.purpleLight],
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              'Student',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResumeSection(bool isDark) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatBox(
-                'Total Applied',
-                totalApplied.toString(),
-                Icons.work_outline_rounded,
-                Colors.blue,
-                isDark,
-              ),
-            ),
-            SizedBox(width: AppConstants.spaceM),
-            Expanded(
-              child: _buildStatBox(
-                'Accepted',
-                totalAccepted.toString(),
-                Icons.check_circle_outline,
-                Colors.green,
-                isDark,
-              ),
-            ),
-          ],
+        Text(
+          'Resume',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: isDark ? AppColors.pureWhite : AppColors.pureBlack,
+          ),
         ),
         SizedBox(height: AppConstants.spaceM),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatBox(
-                'Offers',
-                totalOffered.toString(),
-                Icons.emoji_events_outlined,
-                AppColors.purplePrimary,
-                isDark,
+        GlassContainer(
+          isDark: isDark,
+          padding: EdgeInsets.all(AppConstants.spaceM),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.description_outlined,
+                    color: AppColors.mediumGray,
+                    size: 20,
+                  ),
+                  SizedBox(width: AppConstants.spaceS),
+                  Expanded(
+                    child: Text(
+                      'No resume uploaded',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.mediumGray,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            SizedBox(width: AppConstants.spaceM),
-            Expanded(
-              child: _buildStatBox(
-                'Rejected',
-                totalRejected.toString(),
-                Icons.cancel_outlined,
-                Colors.red,
-                isDark,
+              SizedBox(height: AppConstants.spaceM),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    // TODO: Implement resume upload
+                  },
+                  icon: Icon(Icons.upload_file, size: 18),
+                  label: Text('Upload Resume'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.purplePrimary,
+                    side: BorderSide(color: AppColors.purplePrimary),
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildStatBox(String label, String value, IconData icon, Color color, bool isDark) {
-    return GlassContainer(
-      isDark: isDark,
-      padding: EdgeInsets.all(AppConstants.spaceM),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 20),
+  Widget _buildMentorshipSummary(BuildContext context, int mentorCount, int pendingInvitesCount, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Mentorship',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: isDark ? AppColors.pureWhite : AppColors.pureBlack,
           ),
-          SizedBox(height: AppConstants.spaceM),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w700,
-              color: isDark ? AppColors.pureWhite : AppColors.pureBlack,
+        ),
+        SizedBox(height: AppConstants.spaceM),
+        GestureDetector(
+          onTap: () {
+            Navigator.of(context, rootNavigator: true).pushNamed(AppRoutes.mentorshipManagement);
+          },
+          child: GlassContainer(
+            isDark: isDark,
+            padding: EdgeInsets.all(AppConstants.spaceL),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [AppColors.purplePrimary, AppColors.purpleLight],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.supervisor_account_rounded,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    SizedBox(width: AppConstants.spaceM),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '$mentorCount Active Mentor${mentorCount != 1 ? 's' : ''}',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? AppColors.pureWhite : AppColors.pureBlack,
+                            ),
+                          ),
+                          if (pendingInvitesCount > 0) ...[
+                            SizedBox(height: 4),
+                            Text(
+                              '$pendingInvitesCount pending invite${pendingInvitesCount != 1 ? 's' : ''}',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.orange,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 18,
+                      color: AppColors.mediumGray,
+                    ),
+                  ],
+                ),
+                SizedBox(height: AppConstants.spaceL),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: mentorCount >= 3 ? null : () {
+                      Navigator.of(context, rootNavigator: true).pushNamed(AppRoutes.inviteMentor);
+                    },
+                    icon: Icon(Icons.person_add_outlined, size: 18),
+                    label: Text(mentorCount >= 3 ? 'Maximum reached (3/3)' : 'Invite a Mentor'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.purplePrimary,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: AppColors.mediumGray.withOpacity(0.3),
+                      disabledForegroundColor: AppColors.mediumGray,
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              color: AppColors.mediumGray,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -337,17 +478,6 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildSettingsOptions(BuildContext context, bool isDark, String userRole) {
     return Column(
       children: [
-        // Only show invite mentor for students
-        if (userRole == 'student') ...[
-          _buildSettingTile(
-            icon: Icons.person_add_outlined,
-            title: 'Invite Mentor',
-            onTap: () => Navigator.of(context, rootNavigator: true).pushNamed(AppRoutes.inviteMentor),
-            isDark: isDark,
-          ),
-          SizedBox(height: AppConstants.spaceM),
-        ],
-        
         _buildSettingTile(
           icon: Icons.archive_outlined,
           title: 'Archived Internships',
