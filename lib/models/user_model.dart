@@ -1,4 +1,3 @@
-// lib\models\user_model.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserModel {
@@ -8,6 +7,11 @@ class UserModel {
   final String role; // 'student' or 'mentor'
   final DateTime createdAt;
   final DateTime? lastLoginAt;
+  
+  // Resume fields
+  final String? resumeUrl;
+  final String? resumeFileName;
+  final DateTime? resumeUpdatedAt;
 
   UserModel({
     required this.uid,
@@ -16,6 +20,9 @@ class UserModel {
     this.role = 'student',
     required this.createdAt,
     this.lastLoginAt,
+    this.resumeUrl,
+    this.resumeFileName,
+    this.resumeUpdatedAt,
   });
 
   // Convert to Firestore document
@@ -27,6 +34,9 @@ class UserModel {
       'role': role,
       'createdAt': Timestamp.fromDate(createdAt),
       'lastLoginAt': lastLoginAt != null ? Timestamp.fromDate(lastLoginAt!) : null,
+      'resumeUrl': resumeUrl,
+      'resumeFileName': resumeFileName,
+      'resumeUpdatedAt': resumeUpdatedAt != null ? Timestamp.fromDate(resumeUpdatedAt!) : null,
     };
   }
 
@@ -41,6 +51,11 @@ class UserModel {
       lastLoginAt: map['lastLoginAt'] != null 
           ? (map['lastLoginAt'] as Timestamp).toDate() 
           : null,
+      resumeUrl: map['resumeUrl'] as String?,
+      resumeFileName: map['resumeFileName'] as String?,
+      resumeUpdatedAt: map['resumeUpdatedAt'] != null
+          ? (map['resumeUpdatedAt'] as Timestamp).toDate()
+          : null,
     );
   }
 
@@ -52,6 +67,9 @@ class UserModel {
     String? role,
     DateTime? createdAt,
     DateTime? lastLoginAt,
+    String? resumeUrl,
+    String? resumeFileName,
+    DateTime? resumeUpdatedAt,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -60,6 +78,12 @@ class UserModel {
       role: role ?? this.role,
       createdAt: createdAt ?? this.createdAt,
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,
+      resumeUrl: resumeUrl ?? this.resumeUrl,
+      resumeFileName: resumeFileName ?? this.resumeFileName,
+      resumeUpdatedAt: resumeUpdatedAt ?? this.resumeUpdatedAt,
     );
   }
+
+  // Check if user has uploaded resume
+  bool get hasResume => resumeUrl != null && resumeUrl!.isNotEmpty;
 }

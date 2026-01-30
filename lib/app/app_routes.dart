@@ -1,4 +1,4 @@
-// lib/app/app_routes.dart (UPDATED)
+// lib/app/app_routes.dart
 import 'package:flutter/material.dart';
 import '../screens/onboarding/onboarding_screen.dart';
 import '../screens/auth/auth_screen.dart';
@@ -16,6 +16,7 @@ import '../screens/mentor/mentor_internship_detail_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/profile/mentor_profile_screen.dart';
 import '../screens/profile/mentorship_management_screen.dart';
+import '../screens/profile/resume_upload_screen.dart';
 import '../screens/notifications/notifications_screen.dart';
 
 class AppRoutes {
@@ -24,6 +25,7 @@ class AppRoutes {
   static const String auth = '/auth';
   static const String profile = '/profile';
   static const String notifications = '/notifications';
+  static const String resumeUpload = '/resume-upload';
   
   // Student routes
   static const String studentDashboard = '/student-dashboard';
@@ -56,6 +58,7 @@ class AppRoutes {
     profile: (context) => ProfileScreen(),
     mentorProfile: (context) => MentorProfileScreen(),
     notifications: (context) => NotificationsScreen(),
+    resumeUpload: (context) => ResumeUploadScreen(),
   };
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {

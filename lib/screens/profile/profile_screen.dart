@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import '../../core/constants/colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/widgets/glass_container.dart';
@@ -9,6 +10,7 @@ import '../../core/widgets/gradient_orb.dart';
 import '../../core/widgets/theme_toggle.dart';
 import '../../models/internship_model.dart';
 import '../../app/app_routes.dart';
+import '../../providers/resume_provider.dart';
 
 class ProfileScreen extends StatelessWidget {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -19,105 +21,112 @@ class ProfileScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final user = _auth.currentUser;
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          GradientOrb(
-            size: 300,
-            alignment: Alignment.topRight,
-            colors: [AppColors.purplePrimary, AppColors.purpleLight],
-            opacity: 0.15,
-          ),
+    return ChangeNotifierProvider(
+      create: (_) => ResumeProvider()..initializeResumeStream(user?.uid ?? ''),
+      child: Scaffold(
+        body: Stack(
+          children: [
+            GradientOrb(
+              size: 300,
+              alignment: Alignment.topRight,
+              colors: [AppColors.purplePrimary, AppColors.purpleLight],
+              opacity: 0.15,
+            ),
 
-          SafeArea(
-            child: StreamBuilder<Map<String, dynamic>>(
-              stream: _getProfileDataStream(user?.uid),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return Center(child: CircularProgressIndicator());
-                }
+            SafeArea(
+              child: StreamBuilder<Map<String, dynamic>>(
+                stream: _getProfileDataStream(user?.uid),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return Center(child: CircularProgressIndicator());
+                  }
 
-                final data = snapshot.data!;
-                final userRole = data['role'] as String;
-                final internships = data['internships'] as List<Internship>;
-                final mentorCount = data['mentorCount'] as int;
-                final pendingInvitesCount = data['pendingInvitesCount'] as int;
+                  final data = snapshot.data!;
+                  final userRole = data['role'] as String;
+                  final internships = data['internships'] as List<Internship>;
+                  final mentorCount = data['mentorCount'] as int;
+                  final pendingInvitesCount = data['pendingInvitesCount'] as int;
 
-                return CustomScrollView(
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.all(AppConstants.spaceL),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Header
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Profile',
-                                  style: Theme.of(context).textTheme.displayMedium,
-                                ),
-                                Row(
-                                  children: [
-                                    IconButton(
-                                      onPressed: () => _signOut(context),
-                                      icon: Icon(Icons.logout_rounded),
-                                      tooltip: 'Sign Out',
-                                    ),
-                                    SizedBox(width: AppConstants.spaceS),
-                                    ThemeToggle(),
-                                  ],
-                                ),
-                              ],
-                            ),
-
-                            SizedBox(height: AppConstants.spaceXL),
-
-                            // Identity Section
-                            _buildIdentitySection(user, isDark),
-
-                            SizedBox(height: AppConstants.spaceXL),
-
-                            // Resume Section
-                            _buildResumeSection(isDark),
-
-                            SizedBox(height: AppConstants.spaceXL),
-
-                            // Mentorship Summary Section
-                            _buildMentorshipSummary(context, mentorCount, pendingInvitesCount, isDark),
-
-                            SizedBox(height: AppConstants.spaceXL),
-
-                            // Skills Section
-                            _buildSkillsSummary(internships, isDark),
-
-                            SizedBox(height: AppConstants.spaceXL),
-
-                            // Settings
-                            Text(
-                              'Settings',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                                color: isDark ? AppColors.pureWhite : AppColors.pureBlack,
+                  return CustomScrollView(
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.all(AppConstants.spaceL),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Header
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Profile',
+                                    style: Theme.of(context).textTheme.displayMedium,
+                                  ),
+                                  Row(
+                                    children: [
+                                      IconButton(
+                                        onPressed: () => _signOut(context),
+                                        icon: Icon(Icons.logout_rounded),
+                                        tooltip: 'Sign Out',
+                                      ),
+                                      SizedBox(width: AppConstants.spaceS),
+                                      ThemeToggle(),
+                                    ],
+                                  ),
+                                ],
                               ),
-                            ),
-                            SizedBox(height: AppConstants.spaceM),
-                            _buildSettingsOptions(context, isDark, userRole),
 
-                            SizedBox(height: AppConstants.spaceXL),
-                          ],
+                              SizedBox(height: AppConstants.spaceXL),
+
+                              // Identity Section
+                              _buildIdentitySection(user, isDark),
+
+                              SizedBox(height: AppConstants.spaceXL),
+
+                              // Resume Section
+                              Consumer<ResumeProvider>(
+                                builder: (context, resumeProvider, child) {
+                                  return _buildResumeSection(context, resumeProvider, isDark);
+                                },
+                              ),
+
+                              SizedBox(height: AppConstants.spaceXL),
+
+                              // Mentorship Summary Section
+                              _buildMentorshipSummary(context, mentorCount, pendingInvitesCount, isDark),
+
+                              SizedBox(height: AppConstants.spaceXL),
+
+                              // Skills Section
+                              _buildSkillsSummary(internships, isDark),
+
+                              SizedBox(height: AppConstants.spaceXL),
+
+                              // Settings
+                              Text(
+                                'Settings',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? AppColors.pureWhite : AppColors.pureBlack,
+                                ),
+                              ),
+                              SizedBox(height: AppConstants.spaceM),
+                              _buildSettingsOptions(context, isDark, userRole),
+
+                              SizedBox(height: AppConstants.spaceXL),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                );
-              },
+                    ],
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -229,7 +238,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildResumeSection(bool isDark) {
+  Widget _buildResumeSection(BuildContext context, ResumeProvider resumeProvider, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -242,52 +251,109 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
         SizedBox(height: AppConstants.spaceM),
-        GlassContainer(
-          isDark: isDark,
-          padding: EdgeInsets.all(AppConstants.spaceM),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.description_outlined,
-                    color: AppColors.mediumGray,
-                    size: 20,
-                  ),
-                  SizedBox(width: AppConstants.spaceS),
-                  Expanded(
-                    child: Text(
-                      'No resume uploaded',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.mediumGray,
-                        fontStyle: FontStyle.italic,
+        GestureDetector(
+          onTap: () {
+            Navigator.of(context, rootNavigator: true).pushNamed(AppRoutes.resumeUpload);
+          },
+          child: GlassContainer(
+            isDark: isDark,
+            padding: EdgeInsets.all(AppConstants.spaceM),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        gradient: resumeProvider.resumeUrl != null
+                            ? LinearGradient(
+                                colors: [AppColors.purplePrimary, AppColors.purpleLight],
+                              )
+                            : null,
+                        color: resumeProvider.resumeUrl == null
+                            ? AppColors.mediumGray.withOpacity(0.2)
+                            : null,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        Icons.description_outlined,
+                        color: resumeProvider.resumeUrl != null
+                            ? Colors.white
+                            : AppColors.mediumGray,
+                        size: 20,
+                      ),
+                    ),
+                    SizedBox(width: AppConstants.spaceM),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            resumeProvider.resumeUrl != null
+                                ? resumeProvider.getFileNameFromUrl(resumeProvider.resumeUrl!)
+                                : 'No resume uploaded',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: resumeProvider.resumeUrl != null
+                                  ? (isDark ? AppColors.pureWhite : AppColors.pureBlack)
+                                  : AppColors.mediumGray,
+                              fontStyle: resumeProvider.resumeUrl == null
+                                  ? FontStyle.italic
+                                  : FontStyle.normal,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (resumeProvider.resumeUrl != null) ...[
+                            SizedBox(height: 4),
+                            Text(
+                              'PDF Document',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.mediumGray,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 16,
+                      color: AppColors.mediumGray,
+                    ),
+                  ],
+                ),
+                SizedBox(height: AppConstants.spaceM),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context, rootNavigator: true).pushNamed(AppRoutes.resumeUpload);
+                    },
+                    icon: Icon(
+                      resumeProvider.resumeUrl != null
+                          ? Icons.edit_outlined
+                          : Icons.upload_file,
+                      size: 18,
+                    ),
+                    label: Text(resumeProvider.resumeUrl != null
+                        ? 'Manage Resume'
+                        : 'Upload Resume'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.purplePrimary,
+                      side: BorderSide(color: AppColors.purplePrimary),
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),
-                ],
-              ),
-              SizedBox(height: AppConstants.spaceM),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    // TODO: Implement resume upload
-                  },
-                  icon: Icon(Icons.upload_file, size: 18),
-                  label: Text('Upload Resume'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.purplePrimary,
-                    side: BorderSide(color: AppColors.purplePrimary),
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],
