@@ -33,19 +33,59 @@ class _InviteMentorScreenState extends State<InviteMentorScreen> {
 
     final mentorProvider = Provider.of<MentorProvider>(context, listen: false);
 
-    final success = await mentorProvider.sendInvitation(
-      studentId: user.uid,
-      studentName: user.displayName ?? 'Student',
-      studentEmail: user.email ?? '',
-      mentorEmail: _mentorEmailController.text.trim(),
-    );
+    try {
+      final emailSent = await mentorProvider.sendInvitation(
+        studentId: user.uid,
+        studentName: user.displayName ?? 'Student',
+        studentEmail: user.email ?? '',
+        mentorEmail: _mentorEmailController.text.trim(),
+      );
 
-    if (mounted) {
-      if (success) {
+      if (mounted) {
+        if (emailSent) {
+          // Email notification sent successfully
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Invitation sent! Check your mentor\'s email.'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              margin: EdgeInsets.all(AppConstants.spaceM),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
+              ),
+            ),
+          );
+        } else {
+          // Invitation created but email failed
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Invitation created but email notification failed. Your mentor can still sign up with their email.'),
+              backgroundColor: Colors.orange,
+              behavior: SnackBarBehavior.floating,
+              margin: EdgeInsets.all(AppConstants.spaceM),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
+              ),
+            ),
+          );
+        }
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      // Handle specific errors
+      if (mounted) {
+        String errorMessage = e.toString();
+        
+        if (errorMessage.contains('already been sent')) {
+          errorMessage = 'You\'ve already sent an invitation to this email.';
+        } else if (errorMessage.contains('Already linked')) {
+          errorMessage = 'You\'re already connected with this mentor!';
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Invitation sent! Check your mentor\'s email.'),
-            backgroundColor: Colors.green,
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             margin: EdgeInsets.all(AppConstants.spaceM),
             shape: RoundedRectangleBorder(
@@ -53,20 +93,6 @@ class _InviteMentorScreenState extends State<InviteMentorScreen> {
             ),
           ),
         );
-        Navigator.pop(context);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Email sent to Firestore but couldn\'t send email notification. Invitation is still valid.'),
-            backgroundColor: Colors.orange,
-            behavior: SnackBarBehavior.floating,
-            margin: EdgeInsets.all(AppConstants.spaceM),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
-            ),
-          ),
-        );
-        Navigator.pop(context);
       }
     }
   }

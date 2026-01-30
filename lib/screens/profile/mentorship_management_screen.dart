@@ -18,6 +18,12 @@ class MentorshipManagementScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final user = _auth.currentUser;
 
+    if (user == null) {
+      return Scaffold(
+        body: Center(child: Text('Please log in')),
+      );
+    }
+
     return Scaffold(
       body: Stack(
         children: [
@@ -30,8 +36,31 @@ class MentorshipManagementScreen extends StatelessWidget {
 
           SafeArea(
             child: StreamBuilder<Map<String, dynamic>>(
-              stream: _getMentorshipDataStream(user?.uid),
+              stream: _getMentorshipDataStream(user.uid),
               builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
+
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error_outline, size: 60, color: Colors.red),
+                        SizedBox(height: 16),
+                        Text('Error loading mentors'),
+                        SizedBox(height: 8),
+                        Text(
+                          '${snapshot.error}',
+                          style: TextStyle(fontSize: 12, color: AppColors.mediumGray),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
                 if (!snapshot.hasData) {
                   return Center(child: CircularProgressIndicator());
                 }
@@ -281,83 +310,81 @@ class MentorshipManagementScreen extends StatelessWidget {
     );
   }
 
-  Stream<Map<String, dynamic>> _getMentorshipDataStream(String? uid) async* {
-    if (uid == null) {
-      yield {
-        'mentorCount': 0,
-        'primaryMentor': null,
-        'secondaryMentors': <Map<String, dynamic>>[],
-        'pendingInvites': <Map<String, dynamic>>[],
-      };
-      return;
-    }
+  Stream<Map<String, dynamic>> _getMentorshipDataStream(String uid) {
+    return _firestore
+        .collection('mentorStudentLinks')
+        .where('studentId', isEqualTo: uid)
+        .snapshots()
+        .asyncMap((linksSnapshot) async {
+      try {
+        // Get user data for primary mentor
+        final userDoc = await _firestore.collection('users').doc(uid).get();
+        final primaryMentorId = userDoc.data()?['primaryMentorId'];
 
-    await for (var _ in _firestore.collection('users').doc(uid).snapshots()) {
-      // Get user data
-      final userDoc = await _firestore.collection('users').doc(uid).get();
-      final primaryMentorId = userDoc.data()?['primaryMentorId'];
+        // Get pending invites
+        final pendingInvitesSnapshot = await _firestore
+            .collection('mentorInvites')
+            .where('studentId', isEqualTo: uid)
+            .where('status', isEqualTo: 'pending')
+            .get();
 
-      // Get pending invites
-      final pendingInvitesSnapshot = await _firestore
-          .collection('mentorInvites')
-          .where('studentId', isEqualTo: uid)
-          .where('status', isEqualTo: 'pending')
-          .get();
-
-      final pendingInvites = pendingInvitesSnapshot.docs.map((doc) {
-        final data = doc.data();
-        return {
-          'id': doc.id,
-          'mentorEmail': data['mentorEmail'],
-          'status': data['status'],
-          'createdAt': (data['createdAt'] as Timestamp).toDate(),
-        };
-      }).toList();
-
-      // Get active mentor links
-      final mentorLinksSnapshot = await _firestore
-          .collection('mentorStudentLinks')
-          .where('studentId', isEqualTo: uid)
-          .get();
-
-      final mentorCount = mentorLinksSnapshot.docs.length;
-
-      // Get primary mentor details
-      Map<String, dynamic>? primaryMentor;
-      if (primaryMentorId != null) {
-        final mentorDoc = await _firestore.collection('users').doc(primaryMentorId).get();
-        if (mentorDoc.exists) {
-          primaryMentor = {
-            'id': mentorDoc.id,
-            'name': mentorDoc.data()?['displayName'] ?? 'Mentor',
-            'email': mentorDoc.data()?['email'] ?? '',
+        final pendingInvites = pendingInvitesSnapshot.docs.map((doc) {
+          final data = doc.data();
+          return {
+            'id': doc.id,
+            'mentorEmail': data['mentorEmail'],
+            'status': data['status'],
+            'createdAt': (data['sentAt'] as Timestamp).toDate(),
           };
-        }
-      }
+        }).toList();
 
-      // Get secondary mentors
-      final secondaryMentors = <Map<String, dynamic>>[];
-      for (var link in mentorLinksSnapshot.docs) {
-        final mentorId = link.data()['mentorId'];
-        if (mentorId != primaryMentorId) {
-          final mentorDoc = await _firestore.collection('users').doc(mentorId).get();
+        final mentorCount = linksSnapshot.docs.length;
+
+        // Get primary mentor details
+        Map<String, dynamic>? primaryMentor;
+        if (primaryMentorId != null) {
+          final mentorDoc = await _firestore.collection('users').doc(primaryMentorId).get();
           if (mentorDoc.exists) {
-            secondaryMentors.add({
+            primaryMentor = {
               'id': mentorDoc.id,
               'name': mentorDoc.data()?['displayName'] ?? 'Mentor',
               'email': mentorDoc.data()?['email'] ?? '',
-              'scope': link.data()['scope'] ?? 'general',
-            });
+            };
           }
         }
-      }
 
-      yield {
-        'mentorCount': mentorCount,
-        'primaryMentor': primaryMentor,
-        'secondaryMentors': secondaryMentors,
-        'pendingInvites': pendingInvites,
-      };
-    }
+        // Get secondary mentors
+        final secondaryMentors = <Map<String, dynamic>>[];
+        for (var link in linksSnapshot.docs) {
+          final mentorId = link.data()['mentorId'];
+          if (mentorId != primaryMentorId) {
+            final mentorDoc = await _firestore.collection('users').doc(mentorId).get();
+            if (mentorDoc.exists) {
+              secondaryMentors.add({
+                'id': mentorDoc.id,
+                'name': mentorDoc.data()?['displayName'] ?? 'Mentor',
+                'email': mentorDoc.data()?['email'] ?? '',
+                'scope': link.data()['scope'] ?? 'general',
+              });
+            }
+          }
+        }
+
+        return {
+          'mentorCount': mentorCount,
+          'primaryMentor': primaryMentor,
+          'secondaryMentors': secondaryMentors,
+          'pendingInvites': pendingInvites,
+        };
+      } catch (e) {
+        print('Error in _getMentorshipDataStream: $e');
+        return {
+          'mentorCount': 0,
+          'primaryMentor': null,
+          'secondaryMentors': <Map<String, dynamic>>[],
+          'pendingInvites': <Map<String, dynamic>>[],
+        };
+      }
+    });
   }
 }
