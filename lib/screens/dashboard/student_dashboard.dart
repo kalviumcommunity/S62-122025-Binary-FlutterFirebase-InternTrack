@@ -1,4 +1,4 @@
-// lib\screens\dashboard\student_dashboard.dart
+//lib/screens/dashboard/student_dashboard.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +7,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/widgets/glass_container.dart';
 import '../../core/widgets/gradient_orb.dart';
 import '../../core/widgets/theme_toggle.dart';
+import '../../core/widgets/notification_bell.dart';
 import '../../models/internship_model.dart';
 import '../../providers/internship_provider.dart';
 import '../../app/app_routes.dart';
@@ -104,7 +105,13 @@ class _StudentDashboardState extends State<StudentDashboard> {
                                   ),
                                 ],
                               ),
-                              ThemeToggle(),
+                              Row(
+                                children: [
+                                  NotificationBell(isDark: isDark),
+                                  SizedBox(width: 8),
+                                  ThemeToggle(),
+                                ],
+                              ),
                             ],
                           ),
 
@@ -137,7 +144,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
     final interviewing = provider.getCountByStatus(InternshipStatus.interviewing);
     final offered = provider.getCountByStatus(InternshipStatus.offered);
 
-    return Row(
+    return IntrinsicHeight(
+  child: Row(
       children: [
         Expanded(
           child: _buildStatCard(
@@ -166,6 +174,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
           ),
         ),
       ],
+  ),
     );
   }
 
@@ -204,10 +213,12 @@ class _StudentDashboardState extends State<StudentDashboard> {
           SizedBox(height: 4),
           Text(
             title,
-            style: TextStyle(
-              fontSize: 13,
-              color: AppColors.mediumGray,
-            ),
+  maxLines: 2,
+  textAlign: TextAlign.center,
+  style: TextStyle(
+    fontSize: 13,
+    color: AppColors.mediumGray,
+  ),
           ),
         ],
       ),

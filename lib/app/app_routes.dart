@@ -1,4 +1,4 @@
-// lib\app\app_routes.dart
+// lib/app/app_routes.dart (UPDATED)
 import 'package:flutter/material.dart';
 import '../screens/onboarding/onboarding_screen.dart';
 import '../screens/auth/auth_screen.dart';
@@ -16,12 +16,14 @@ import '../screens/mentor/mentor_internship_detail_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/profile/mentor_profile_screen.dart';
 import '../screens/profile/mentorship_management_screen.dart';
+import '../screens/notifications/notifications_screen.dart';
 
 class AppRoutes {
   // Common routes
   static const String onboarding = '/onboarding';
   static const String auth = '/auth';
   static const String profile = '/profile';
+  static const String notifications = '/notifications';
   
   // Student routes
   static const String studentDashboard = '/student-dashboard';
@@ -53,6 +55,7 @@ class AppRoutes {
     mentorStudents: (context) => MentorStudentsScreen(),
     profile: (context) => ProfileScreen(),
     mentorProfile: (context) => MentorProfileScreen(),
+    notifications: (context) => NotificationsScreen(),
   };
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
