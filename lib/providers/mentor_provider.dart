@@ -113,6 +113,7 @@ class MentorProvider extends ChangeNotifier {
       _error = null;
       notifyListeners();
 
+      // Create invitation in Firestore (handles both existing and new mentors)
       await _mentorService.sendInvitation(
         studentId: studentId,
         studentName: studentName,
@@ -120,6 +121,7 @@ class MentorProvider extends ChangeNotifier {
         mentorEmail: mentorEmail,
       );
 
+      // Try to send email notification
       final emailSent = await _emailService.sendMentorInvitation(
         mentorEmail: mentorEmail,
         studentName: studentName,
@@ -129,12 +131,12 @@ class MentorProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       
-      return emailSent;
+      return emailSent; // Returns true if email sent, false if only Firestore succeeded
     } catch (e) {
       _error = e.toString();
       _isLoading = false;
       notifyListeners();
-      return false;
+      rethrow; // Let the UI handle the error with better messaging
     }
   }
 

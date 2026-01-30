@@ -1,4 +1,4 @@
-// lib/services/auth_service.dart (UPDATED)
+// lib/services/auth_service.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
@@ -12,25 +12,41 @@ class AuthService {
   Stream<User?> get authStateChanges => _auth.authStateChanges();
   User? get currentUser => _auth.currentUser;
 
-  // UPDATED: Sign up with automatic role detection
+  // Sign up with automatic role detection
   Future<UserModel?> signUp({
     required String email,
     required String password,
     required String displayName,
   }) async {
     try {
+      print('AuthService: Starting signup for: $email');
+      
+      final normalizedEmail = email.trim().toLowerCase();
+      
       // Check if email has a mentor invitation
-      final invitation = await _mentorService.checkInvitation(email.trim());
-      final role = invitation != null ? 'mentor' : 'student';
+      final invitationSnapshot = await _firestore
+          .collection('mentorInvites')
+          .where('mentorEmail', isEqualTo: normalizedEmail)
+          .where('status', isEqualTo: 'pending')
+          .get();
+
+      final bool hasMentorInvitation = invitationSnapshot.docs.isNotEmpty;
+      final role = hasMentorInvitation ? 'mentor' : 'student';
+      
+      print('AuthService: Found ${invitationSnapshot.docs.length} pending invitations');
+      print('AuthService: Role determined as: $role');
 
       // Create user in Firebase Auth
       final userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email.trim(),
+        email: normalizedEmail,
         password: password.trim(),
       );
 
       final user = userCredential.user;
-      if (user == null) return null;
+      if (user == null) {
+        print('AuthService ERROR: User creation returned null');
+        return null;
+      }
 
       await user.updateDisplayName(displayName.trim());
       await user.reload();
@@ -38,42 +54,65 @@ class AuthService {
       // Create user document with determined role
       final userModel = UserModel(
         uid: user.uid,
-        email: email.trim(),
+        email: normalizedEmail,
         displayName: displayName.trim(),
         role: role,
         createdAt: DateTime.now(),
         lastLoginAt: DateTime.now(),
       );
 
+      print('AuthService: Creating user document with role: $role');
       await _firestore.collection('users').doc(user.uid).set(userModel.toMap());
 
-      // If mentor, create the mentor-student link
-      if (role == 'mentor' && invitation != null) {
-        await _mentorService.createMentorLink(
-          mentorId: user.uid,
-          studentId: invitation['studentId'] as String,
-          studentName: invitation['studentName'] as String,
-          studentEmail: invitation['studentEmail'] as String,
-          inviteId: invitation['id'] as String,
-        );
+      // If mentor, create mentor-student links for ALL pending invitations
+      if (role == 'mentor' && hasMentorInvitation) {
+        print('AuthService: Processing ${invitationSnapshot.docs.length} mentor invitations');
+        
+        for (var inviteDoc in invitationSnapshot.docs) {
+          try {
+            final inviteData = inviteDoc.data();
+            
+            print('AuthService: Creating link for student: ${inviteData['studentId']}');
+            
+            await _mentorService.createMentorLink(
+              mentorId: user.uid,
+              studentId: inviteData['studentId'] as String,
+              studentName: inviteData['studentName'] as String,
+              studentEmail: inviteData['studentEmail'] as String,
+              inviteId: inviteDoc.id,
+            );
+            
+            print('AuthService: Successfully created link for invitation ${inviteDoc.id}');
+          } catch (e) {
+            print('AuthService ERROR creating link for invitation ${inviteDoc.id}: $e');
+            // Continue with other invitations even if one fails
+          }
+        }
+        
+        print('AuthService: Completed processing all mentor invitations');
       }
 
+      print('AuthService: Signup completed successfully for ${userModel.role}');
       return userModel;
     } on FirebaseAuthException catch (e) {
+      print('AuthService ERROR (FirebaseAuth): ${e.code} - ${e.message}');
       throw _handleAuthException(e);
     } catch (e) {
+      print('AuthService ERROR (General): $e');
       throw 'An unexpected error occurred. Please try again.';
     }
   }
 
-  // Sign in (unchanged)
+  // Sign in
   Future<UserModel?> signIn({
     required String email,
     required String password,
   }) async {
     try {
+      final normalizedEmail = email.trim().toLowerCase();
+      
       final userCredential = await _auth.signInWithEmailAndPassword(
-        email: email.trim(),
+        email: normalizedEmail,
         password: password.trim(),
       );
 
@@ -89,7 +128,7 @@ class AuthService {
       if (!userDoc.exists) {
         final userModel = UserModel(
           uid: user.uid,
-          email: user.email ?? email.trim(),
+          email: normalizedEmail,
           displayName: user.displayName ?? 'User',
           role: 'student',
           createdAt: DateTime.now(),

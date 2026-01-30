@@ -1,5 +1,4 @@
 // lib/services/mentor_service.dart
-// FIXED: Now uses feedbackCycles collection instead of feedbackRequests
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/mentor_invitation_model.dart';
 import '../models/internship_model.dart';
@@ -8,10 +7,9 @@ import '../models/feedback_cycle_model.dart';
 class MentorService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // ==================== FEEDBACK CYCLES (NEW) ====================
+  // ==================== FEEDBACK CYCLES ====================
   
   /// Get pending feedback cycles for a mentor
-  /// This replaces the old getMentorRequests that used feedbackRequests collection
   Stream<List<FeedbackCycle>> getMentorPendingCycles(String mentorId) {
     print('MentorService: Streaming pending cycles for mentor: $mentorId');
     
@@ -89,14 +87,15 @@ class MentorService {
   // ==================== INVITATIONS ====================
 
   /// Check if there's a pending invitation for the given email
-  /// Returns the invitation data if found, null otherwise
   Future<Map<String, dynamic>?> checkInvitation(String email) async {
     try {
       print('MentorService: Checking invitation for email: $email');
       
+      final normalizedEmail = email.trim().toLowerCase();
+      
       final snapshot = await _firestore
           .collection('mentorInvites')
-          .where('mentorEmail', isEqualTo: email.trim().toLowerCase())
+          .where('mentorEmail', isEqualTo: normalizedEmail)
           .where('status', isEqualTo: 'pending')
           .limit(1)
           .get();
@@ -126,13 +125,41 @@ class MentorService {
       print('MentorService: Creating mentor link...');
       print('  mentorId: $mentorId');
       print('  studentId: $studentId');
+      print('  inviteId: $inviteId');
 
-      // Get mentor email
+      // Get mentor data
       final mentorDoc = await _firestore.collection('users').doc(mentorId).get();
       if (!mentorDoc.exists) {
-        throw 'Mentor user not found';
+        throw 'Mentor user document not found';
       }
-      final mentorEmail = mentorDoc.data()?['email'] ?? '';
+      
+      final mentorData = mentorDoc.data();
+      final mentorEmail = mentorData?['email'] ?? '';
+      final mentorName = mentorData?['displayName'] ?? 'Mentor';
+
+      print('  mentorEmail: $mentorEmail');
+      print('  mentorName: $mentorName');
+
+      // Check if link already exists
+      final existingLink = await _firestore
+          .collection('mentorStudentLinks')
+          .where('mentorId', isEqualTo: mentorId)
+          .where('studentId', isEqualTo: studentId)
+          .limit(1)
+          .get();
+
+      if (existingLink.docs.isNotEmpty) {
+        print('MentorService: Link already exists, updating invitation status only');
+        
+        // Just update the invitation status
+        await _firestore.collection('mentorInvites').doc(inviteId).update({
+          'status': 'accepted',
+          'mentorId': mentorId,
+          'acceptedAt': Timestamp.now(),
+        });
+        
+        return;
+      }
 
       // Create the mentor-student link
       await _firestore.collection('mentorStudentLinks').add({
@@ -144,6 +171,8 @@ class MentorService {
         'linkedAt': Timestamp.now(),
       });
 
+      print('MentorService: Mentor-student link created');
+
       // Update invitation status
       await _firestore.collection('mentorInvites').doc(inviteId).update({
         'status': 'accepted',
@@ -151,14 +180,14 @@ class MentorService {
         'acceptedAt': Timestamp.now(),
       });
 
-      print('MentorService: Successfully created mentor link');
+      print('MentorService: Successfully created mentor link and updated invitation');
     } catch (e) {
       print('MentorService ERROR creating mentor link: $e');
       throw 'Failed to create mentor link: $e';
     }
   }
 
-  /// Send mentor invitation
+  /// Send mentor invitation - handles both existing and new mentors
   Future<void> sendInvitation({
     required String studentId,
     required String studentName,
@@ -166,52 +195,86 @@ class MentorService {
     required String mentorEmail,
   }) async {
     try {
-      // Check if mentor exists
+      print('MentorService: Sending invitation to: $mentorEmail');
+      
+      final normalizedEmail = mentorEmail.trim().toLowerCase();
+
+      // Check if there's already a pending invitation from THIS student
+      final existingInvite = await _firestore
+          .collection('mentorInvites')
+          .where('studentId', isEqualTo: studentId)
+          .where('mentorEmail', isEqualTo: normalizedEmail)
+          .where('status', isEqualTo: 'pending')
+          .limit(1)
+          .get();
+
+      if (existingInvite.docs.isNotEmpty) {
+        throw 'An invitation has already been sent to this email';
+      }
+
+      // Check if mentor already exists
       final mentorSnapshot = await _firestore
           .collection('users')
-          .where('email', isEqualTo: mentorEmail)
+          .where('email', isEqualTo: normalizedEmail)
           .where('role', isEqualTo: 'mentor')
           .limit(1)
           .get();
 
-      if (mentorSnapshot.docs.isEmpty) {
-        throw 'No mentor found with email: $mentorEmail';
+      if (mentorSnapshot.docs.isNotEmpty) {
+        // CASE 1: Mentor already exists - link them immediately
+        final mentorId = mentorSnapshot.docs.first.id;
+        
+        // Check if already linked
+        final existingLink = await _firestore
+            .collection('mentorStudentLinks')
+            .where('studentId', isEqualTo: studentId)
+            .where('mentorId', isEqualTo: mentorId)
+            .limit(1)
+            .get();
+
+        if (existingLink.docs.isNotEmpty) {
+          throw 'Already linked with this mentor';
+        }
+
+        // Get mentor details
+        final mentorData = mentorSnapshot.docs.first.data();
+        
+        // Create the link immediately
+        await _firestore.collection('mentorStudentLinks').add({
+          'studentId': studentId,
+          'studentName': studentName,
+          'studentEmail': studentEmail,
+          'mentorId': mentorId,
+          'mentorEmail': normalizedEmail,
+          'linkedAt': Timestamp.now(),
+        });
+
+        // Create accepted invitation record for tracking
+        await _firestore.collection('mentorInvites').add({
+          'studentId': studentId,
+          'studentName': studentName,
+          'studentEmail': studentEmail,
+          'mentorEmail': normalizedEmail,
+          'mentorId': mentorId,
+          'status': 'accepted',
+          'sentAt': Timestamp.now(),
+          'acceptedAt': Timestamp.now(),
+        });
+
+        print('MentorService: Successfully linked with existing mentor');
+      } else {
+        // CASE 2: Mentor doesn't exist - create pending invitation
+        await _firestore.collection('mentorInvites').add({
+          'studentId': studentId,
+          'studentName': studentName,
+          'studentEmail': studentEmail,
+          'mentorEmail': normalizedEmail,
+          'status': 'pending',
+          'sentAt': Timestamp.now(),
+        });
+
+        print('MentorService: Successfully created pending invitation');
       }
-
-      final mentorId = mentorSnapshot.docs.first.id;
-
-      // Check if link already exists
-      final existingLink = await _firestore
-          .collection('mentorStudentLinks')
-          .where('studentId', isEqualTo: studentId)
-          .where('mentorId', isEqualTo: mentorId)
-          .limit(1)
-          .get();
-
-      if (existingLink.docs.isNotEmpty) {
-        throw 'Already linked with this mentor';
-      }
-
-      // Create the link
-      await _firestore.collection('mentorStudentLinks').add({
-        'studentId': studentId,
-        'studentName': studentName,
-        'studentEmail': studentEmail,
-        'mentorId': mentorId,
-        'mentorEmail': mentorEmail,
-        'linkedAt': Timestamp.now(),
-      });
-
-      // Create notification/invitation record (optional)
-      await _firestore.collection('mentorInvites').add({
-        'studentId': studentId,
-        'studentName': studentName,
-        'studentEmail': studentEmail,
-        'mentorEmail': mentorEmail,
-        'mentorId': mentorId,
-        'status': 'accepted',
-        'sentAt': Timestamp.now(),
-      });
     } catch (e) {
       print('MentorService ERROR sending invitation: $e');
       throw e;
