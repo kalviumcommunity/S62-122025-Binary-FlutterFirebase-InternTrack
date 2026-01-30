@@ -1,4 +1,4 @@
-// lib/services/mentor_service.dart
+// lib\services\mentor_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/mentor_invitation_model.dart';
 import '../models/internship_model.dart';
@@ -7,7 +7,7 @@ import '../models/feedback_cycle_model.dart';
 class MentorService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // ==================== FEEDBACK CYCLES ====================
+  // FEEDBACK CYCLES
   
   /// Get pending feedback cycles for a mentor
   Stream<List<FeedbackCycle>> getMentorPendingCycles(String mentorId) {
@@ -54,7 +54,7 @@ class MentorService {
     }
   }
 
-  // ==================== STUDENTS MANAGEMENT ====================
+  // STUDENTS MANAGEMENT
 
   /// Get stream of mentor's students
   Stream<List<MentorStudentLink>> getStudentsStream(String mentorId) {
@@ -84,7 +84,7 @@ class MentorService {
     });
   }
 
-  // ==================== INVITATIONS ====================
+  // INVITATIONS 
 
   /// Check if there's a pending invitation for the given email
   Future<Map<String, dynamic>?> checkInvitation(String email) async {

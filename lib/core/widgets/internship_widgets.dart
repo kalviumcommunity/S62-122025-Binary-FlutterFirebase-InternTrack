@@ -1,3 +1,4 @@
+// lib\core\widgets\internship_widgets.dart
 import 'package:flutter/material.dart';
 import '../../models/internship_model.dart';
 import '../constants/colors.dart';

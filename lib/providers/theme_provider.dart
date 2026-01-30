@@ -1,4 +1,4 @@
-// lib/providers/theme_provider.dart
+// lib\providers\theme_provider.dart
 import 'package:flutter/material.dart';
 
 class ThemeProvider extends InheritedWidget {

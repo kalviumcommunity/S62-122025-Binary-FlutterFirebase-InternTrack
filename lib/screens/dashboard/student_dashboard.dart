@@ -1,4 +1,4 @@
-//lib/screens/dashboard/student_dashboard.dart
+// lib\screens\dashboard\student_dashboard.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';

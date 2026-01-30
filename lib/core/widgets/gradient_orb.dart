@@ -1,3 +1,4 @@
+// lib\core\widgets\gradient_orb.dart
 import 'package:flutter/material.dart';
 
 class GradientOrb extends StatelessWidget {
