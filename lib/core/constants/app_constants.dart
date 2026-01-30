@@ -1,3 +1,5 @@
+// lib\core\constants\app_constants.dart
+
 class AppConstants {
   // Timing
   static const int splashDuration = 2500;

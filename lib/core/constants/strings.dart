@@ -1,3 +1,5 @@
+// lib\core\constants\strings.dart
+
 class AppStrings {
   // App Info
   static const String appName = 'InternTrack';

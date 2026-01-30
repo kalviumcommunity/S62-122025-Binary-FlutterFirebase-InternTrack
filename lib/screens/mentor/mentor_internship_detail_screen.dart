@@ -1,4 +1,4 @@
-// lib/screens/mentor/mentor_internship_detail_screen.dart
+// lib\screens\mentor\mentor_internship_detail_screen.dart
 import 'package:flutter/material.dart';
 import '../../core/constants/colors.dart';
 import '../../core/constants/app_constants.dart';
