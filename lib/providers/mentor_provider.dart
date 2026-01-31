@@ -1,5 +1,6 @@
-// lib\providers\mentor_provider.dart
+// lib/providers/mentor_provider.dart
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/mentor_invitation_model.dart';
 import '../models/internship_model.dart';
 import '../models/feedback_cycle_model.dart';
@@ -9,26 +10,46 @@ import '../services/email_service.dart';
 class MentorProvider extends ChangeNotifier {
   final MentorService _mentorService = MentorService();
   final EmailService _emailService = EmailService();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   
   List<MentorStudentLink> _students = [];
   List<Internship> _selectedStudentInternships = [];
   List<FeedbackCycle> _pendingCycles = [];
+  int _totalFeedbackGiven = 0;
   MentorStudentLink? _selectedStudent;
   bool _isLoading = false;
   String? _error;
 
   List<MentorStudentLink> get students => _students;
   List<Internship> get selectedStudentInternships => _selectedStudentInternships;
-  List<FeedbackCycle> get requests => _pendingCycles; // Keep same getter name for compatibility
+  List<FeedbackCycle> get requests => _pendingCycles;
   MentorStudentLink? get selectedStudent => _selectedStudent;
   bool get isLoading => _isLoading;
   String? get error => _error;
   int get totalInternships => _selectedStudentInternships.length;
 
+  // Dashboard statistics
+  int get totalStudents => _students.length;
+  int get pendingRequestsCount => _pendingCycles.length;
+  
+  int _highPriorityInternshipsCount = 0;
+  int get highPriorityInternshipsCount => _highPriorityInternshipsCount;
+  
+  DateTime? get lastRequestTime {
+    if (_pendingCycles.isEmpty) return null;
+    return _pendingCycles
+        .map((c) => c.requestedAt)
+        .reduce((a, b) => a.isAfter(b) ? a : b);
+  }
+  
+  // Actual feedback count from Firestore
+  int get totalFeedbackGiven => _totalFeedbackGiven;
+
   /// Initialize pending feedback requests for mentor
   void initializeRequests(String mentorId) {
     print('MentorProvider: Initializing requests for mentor: $mentorId');
     
+    // Load pending cycles
     _mentorService.getMentorPendingCycles(mentorId).listen(
       (cycles) {
         print('MentorProvider: Received ${cycles.length} pending cycles');
@@ -41,6 +62,67 @@ class MentorProvider extends ChangeNotifier {
         notifyListeners();
       },
     );
+
+    // Load total feedback count
+    _loadFeedbackCount(mentorId);
+    
+    // Load high-priority internships count
+    _loadHighPriorityInternships(mentorId);
+  }
+
+  /// Load high-priority internships count across all students
+  Future<void> _loadHighPriorityInternships(String mentorId) async {
+    try {
+      // Get all student IDs linked to this mentor
+      final studentSnapshot = await _firestore
+          .collection('mentorStudentLinks')
+          .where('mentorId', isEqualTo: mentorId)
+          .get();
+      
+      final studentIds = studentSnapshot.docs
+          .map((doc) => (doc.data() as Map<String, dynamic>)['studentId'] as String)
+          .toList();
+      
+      if (studentIds.isEmpty) {
+        _highPriorityInternshipsCount = 0;
+        notifyListeners();
+        return;
+      }
+      
+      // Count high-priority internships for all these students
+      int count = 0;
+      for (final studentId in studentIds) {
+        final internshipSnapshot = await _firestore
+            .collection('internships')
+            .where('studentId', isEqualTo: studentId)
+            .where('priority', isEqualTo: 'high')
+            .where('isArchived', isEqualTo: false)
+            .get();
+        
+        count += internshipSnapshot.docs.length;
+      }
+      
+      _highPriorityInternshipsCount = count;
+      notifyListeners();
+    } catch (e) {
+      print('MentorProvider ERROR loading high-priority internships: $e');
+    }
+  }
+
+  /// Load actual feedback count from Firestore
+  Future<void> _loadFeedbackCount(String mentorId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('feedbackCycles')
+          .where('mentorId', isEqualTo: mentorId)
+          .where('status', isEqualTo: 'completed')
+          .get();
+      
+      _totalFeedbackGiven = snapshot.docs.length;
+      notifyListeners();
+    } catch (e) {
+      print('MentorProvider ERROR loading feedback count: $e');
+    }
   }
 
   /// Initialize mentor's students stream
@@ -92,7 +174,10 @@ class MentorProvider extends ChangeNotifier {
         feedback: feedback,
         nextStep: nextStep,
       );
-      // Cycles list will auto-update via stream
+      
+      // Increment feedback count
+      _totalFeedbackGiven++;
+      notifyListeners();
     } catch (e) {
       _error = e.toString();
       notifyListeners();
@@ -112,7 +197,6 @@ class MentorProvider extends ChangeNotifier {
       _error = null;
       notifyListeners();
 
-      // Create invitation in Firestore (handles both existing and new mentors)
       await _mentorService.sendInvitation(
         studentId: studentId,
         studentName: studentName,
@@ -120,7 +204,6 @@ class MentorProvider extends ChangeNotifier {
         mentorEmail: mentorEmail,
       );
 
-      // Try to send email notification
       final emailSent = await _emailService.sendMentorInvitation(
         mentorEmail: mentorEmail,
         studentName: studentName,
@@ -130,12 +213,12 @@ class MentorProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       
-      return emailSent; // Returns true if email sent, false if only Firestore succeeded
+      return emailSent;
     } catch (e) {
       _error = e.toString();
       _isLoading = false;
       notifyListeners();
-      rethrow; // Let the UI handle the error with better messaging
+      rethrow;
     }
   }
 
