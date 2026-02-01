@@ -1,15 +1,18 @@
-// lib\screens\mentor\mentor_internship_detail_screen.dart
+// lib/screens/mentor/mentor_internship_detail_screen.dart - ENHANCED VERSION
 import 'package:flutter/material.dart';
 import '../../core/constants/colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/widgets/glass_container.dart';
 import '../../core/widgets/gradient_orb.dart';
 import '../../models/internship_model.dart';
+import 'widget/feedback_timeline.dart';
+
 
 class MentorInternshipDetailScreen extends StatelessWidget {
   final Internship internship;
 
-  const MentorInternshipDetailScreen({Key? key, required this.internship}) : super(key: key);
+  const MentorInternshipDetailScreen({Key? key, required this.internship})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +27,6 @@ class MentorInternshipDetailScreen extends StatelessWidget {
             colors: [AppColors.bluePrimary, AppColors.blueLight],
             opacity: 0.15,
           ),
-
           SafeArea(
             child: CustomScrollView(
               slivers: [
@@ -34,6 +36,7 @@ class MentorInternshipDetailScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Header
                         Row(
                           children: [
                             IconButton(
@@ -47,7 +50,8 @@ class MentorInternshipDetailScreen extends StatelessWidget {
                             ),
                             Spacer(),
                             Container(
-                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
                                 color: AppColors.blueLight.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(8),
@@ -55,7 +59,8 @@ class MentorInternshipDetailScreen extends StatelessWidget {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.visibility_outlined, size: 16, color: AppColors.bluePrimary),
+                                  Icon(Icons.visibility_outlined,
+                                      size: 16, color: AppColors.bluePrimary),
                                   SizedBox(width: 6),
                                   Text(
                                     'View Only',
@@ -73,6 +78,7 @@ class MentorInternshipDetailScreen extends StatelessWidget {
 
                         SizedBox(height: AppConstants.spaceL),
 
+                        // Internship card
                         GlassContainer(
                           isDark: isDark,
                           padding: EdgeInsets.all(AppConstants.spaceL),
@@ -86,13 +92,18 @@ class MentorInternshipDetailScreen extends StatelessWidget {
                                     height: 60,
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
-                                        colors: [AppColors.bluePrimary, AppColors.blueLight],
+                                        colors: [
+                                          AppColors.bluePrimary,
+                                          AppColors.blueLight
+                                        ],
                                       ),
                                       borderRadius: BorderRadius.circular(16),
                                     ),
                                     child: Center(
                                       child: Text(
-                                        internship.company.substring(0, 1).toUpperCase(),
+                                        internship.company
+                                            .substring(0, 1)
+                                            .toUpperCase(),
                                         style: TextStyle(
                                           fontSize: 28,
                                           fontWeight: FontWeight.w700,
@@ -104,14 +115,17 @@ class MentorInternshipDetailScreen extends StatelessWidget {
                                   SizedBox(width: AppConstants.spaceM),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           internship.company,
                                           style: TextStyle(
                                             fontSize: 24,
                                             fontWeight: FontWeight.w700,
-                                            color: isDark ? AppColors.pureWhite : AppColors.pureBlack,
+                                            color: isDark
+                                                ? AppColors.pureWhite
+                                                : AppColors.pureBlack,
                                           ),
                                         ),
                                         SizedBox(height: 4),
@@ -135,9 +149,11 @@ class MentorInternshipDetailScreen extends StatelessWidget {
                                   _buildStatusBadge(internship.status),
                                   _buildPriorityBadge(internship.priority),
                                   if (internship.location != null)
-                                    _buildInfoChip(Icons.location_on_outlined, internship.location!),
+                                    _buildInfoChip(Icons.location_on_outlined,
+                                        internship.location!),
                                   if (internship.salary != null)
-                                    _buildInfoChip(Icons.attach_money_rounded, internship.salary!),
+                                    _buildInfoChip(Icons.attach_money_rounded,
+                                        internship.salary!),
                                 ],
                               ),
                             ],
@@ -146,6 +162,15 @@ class MentorInternshipDetailScreen extends StatelessWidget {
 
                         SizedBox(height: AppConstants.spaceL),
 
+                        // FEEDBACK TIMELINE (COLLAPSIBLE)
+                        FeedbackTimeline(
+                          internshipId: internship.id,
+                          isDark: isDark,
+                        ),
+
+                        SizedBox(height: AppConstants.spaceL),
+
+                        // Description
                         if (internship.description != null) ...[
                           Text(
                             'Description',
@@ -159,7 +184,9 @@ class MentorInternshipDetailScreen extends StatelessWidget {
                               internship.description!,
                               style: TextStyle(
                                 fontSize: 15,
-                                color: isDark ? AppColors.pureWhite : AppColors.pureBlack,
+                                color: isDark
+                                    ? AppColors.pureWhite
+                                    : AppColors.pureBlack,
                                 height: 1.5,
                               ),
                             ),
@@ -167,9 +194,10 @@ class MentorInternshipDetailScreen extends StatelessWidget {
                           SizedBox(height: AppConstants.spaceL),
                         ],
 
+                        // Timeline
                         if (internship.timeline.isNotEmpty) ...[
                           Text(
-                            'Timeline',
+                            'Application Timeline',
                             style: Theme.of(context).textTheme.headlineSmall,
                           ),
                           SizedBox(height: AppConstants.spaceM),
@@ -177,7 +205,9 @@ class MentorInternshipDetailScreen extends StatelessWidget {
                           SizedBox(height: AppConstants.spaceL),
                         ],
 
-                        if (internship.reflectionNotes != null && internship.reflectionNotes!.isNotEmpty) ...[
+                        // Reflections
+                        if (internship.reflectionNotes != null &&
+                            internship.reflectionNotes!.isNotEmpty) ...[
                           Text(
                             'Student Reflections',
                             style: Theme.of(context).textTheme.headlineSmall,
@@ -190,7 +220,9 @@ class MentorInternshipDetailScreen extends StatelessWidget {
                               internship.reflectionNotes!,
                               style: TextStyle(
                                 fontSize: 15,
-                                color: isDark ? AppColors.pureWhite : AppColors.pureBlack,
+                                color: isDark
+                                    ? AppColors.pureWhite
+                                    : AppColors.pureBlack,
                                 height: 1.5,
                               ),
                             ),
@@ -198,6 +230,7 @@ class MentorInternshipDetailScreen extends StatelessWidget {
                           SizedBox(height: AppConstants.spaceL),
                         ],
 
+                        // Skills
                         if (internship.skillsGained.isNotEmpty) ...[
                           Text(
                             'Skills Gained',
@@ -212,10 +245,14 @@ class MentorInternshipDetailScreen extends StatelessWidget {
                               runSpacing: 8,
                               children: internship.skillsGained.map((skill) {
                                 return Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
-                                      colors: [AppColors.bluePrimary, AppColors.blueLight],
+                                      colors: [
+                                        AppColors.bluePrimary,
+                                        AppColors.blueLight
+                                      ],
                                     ),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
@@ -254,7 +291,7 @@ class MentorInternshipDetailScreen extends StatelessWidget {
           final index = entry.key;
           final event = entry.value;
           final isLast = index == internship.timeline.length - 1;
-          
+
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -290,7 +327,9 @@ class MentorInternshipDetailScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: isDark ? AppColors.pureWhite : AppColors.pureBlack,
+                          color: isDark
+                              ? AppColors.pureWhite
+                              : AppColors.pureBlack,
                         ),
                       ),
                       if (event.description != null) ...[
@@ -436,10 +475,18 @@ class MentorInternshipDetailScreen extends StatelessWidget {
   }
 
   String _getStatusLabel(InternshipStatus status) {
-    return status.toString().split('.').last.replaceAllMapped(
+    return status
+        .toString()
+        .split('.')
+        .last
+        .replaceAllMapped(
           RegExp(r'[A-Z]'),
           (match) => ' ${match.group(0)}',
-        ).trim().split(' ').map((word) => word[0].toUpperCase() + word.substring(1)).join(' ');
+        )
+        .trim()
+        .split(' ')
+        .map((word) => word[0].toUpperCase() + word.substring(1))
+        .join(' ');
   }
 
   String _formatDate(DateTime date) {

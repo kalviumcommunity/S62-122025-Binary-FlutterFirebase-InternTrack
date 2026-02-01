@@ -1,4 +1,4 @@
-// lib/screens/dashboard/mentor_dashboard.dart
+// lib\screens\dashboard\mentor_dashboard.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
@@ -604,7 +604,9 @@ class _MentorDashboardState extends State<MentorDashboard> {
               ),
               Consumer<MentorProvider>(
                 builder: (context, provider, _) {
-                  final count = provider.requests.length;
+                  final pendingCount = provider.requests
+                      .where((r) => r.status == 'pending')
+                      .length;
 
                   return Stack(
                     children: [
@@ -615,7 +617,7 @@ class _MentorDashboardState extends State<MentorDashboard> {
                         isDark: isDark,
                       ),
 
-                      if (count > 0)
+                      if (pendingCount > 0)
                         Positioned(
                           right: 6,
                           top: 2,
@@ -626,7 +628,7 @@ class _MentorDashboardState extends State<MentorDashboard> {
                               shape: BoxShape.circle,
                             ),
                             child: Text(
-                              count.toString(),
+                              pendingCount.toString(),
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 11,
