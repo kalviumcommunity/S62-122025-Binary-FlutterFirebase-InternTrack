@@ -1,8 +1,8 @@
 // lib/core/widgets/student_preview_card.dart
 import 'package:flutter/material.dart';
-import '../constants/colors.dart';
-import '../constants/app_constants.dart';
-import 'glass_container.dart';
+import '../../../core/constants/colors.dart';
+import '../../../core/constants/app_constants.dart';
+import '../../../core/widgets/glass_container.dart';
 
 enum StudentStatus { onTrack, needsAttention, urgent }
 

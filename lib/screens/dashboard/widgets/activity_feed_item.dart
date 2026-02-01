@@ -1,7 +1,7 @@
 // lib/core/widgets/activity_feed_item.dart
 import 'package:flutter/material.dart';
-import '../constants/colors.dart';
-import '../constants/app_constants.dart';
+import '../../../core/constants/colors.dart';
+import '../../../core/constants/app_constants.dart';
 
 enum ActivityType { mentorFeedback, studentRequest, internshipUpdate, studentAdded }
 

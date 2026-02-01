@@ -18,11 +18,11 @@ import '../profile/mentor_profile_screen.dart';
 import '../mentor/mentor_requests_screen.dart';
 
 // Import new widgets
-import '../../core/widgets/action_required_panel.dart';
-import '../../core/widgets/mentor_stat_card.dart';
-import '../../core/widgets/student_preview_card.dart';
-import '../../core/widgets/activity_feed_item.dart';
-import '../../core/widgets/suggested_action_card.dart';
+import 'widgets/action_required_panel.dart';
+import 'widgets/mentor_stat_card.dart';
+import 'widgets/student_preview_card.dart';
+import 'widgets/activity_feed_item.dart';
+import 'widgets/suggested_action_card.dart';
 
 class MentorDashboard extends StatefulWidget {
   @override

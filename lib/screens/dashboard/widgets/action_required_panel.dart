@@ -1,8 +1,8 @@
 // lib/core/widgets/action_required_panel.dart
 import 'package:flutter/material.dart';
-import '../constants/colors.dart';
-import '../constants/app_constants.dart';
-import 'glass_container.dart';
+import '../../../core/constants/colors.dart';
+import '../../../core/constants/app_constants.dart';
+import '../../../core/widgets/glass_container.dart';
 
 class ActionRequiredPanel extends StatelessWidget {
   final int pendingRequestsCount;
