@@ -1,6 +1,7 @@
 // lib\services\feedback_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/feedback_cycle_model.dart';
+import 'mentorship_timeline_service.dart';
 
 class FeedbackService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -106,6 +107,10 @@ class FeedbackService {
     required String cycleId,
     required String feedback,
     String? nextStep,
+    String? mentorId,
+    String? studentId,
+    String? internshipId,
+    String? company,
   }) async {
     try {
       print('FeedbackService: Submitting mentor feedback for cycle: $cycleId');
@@ -117,6 +122,17 @@ class FeedbackService {
         'respondedAt': Timestamp.now(),
         'seenByStudent': false,
       });
+      
+      // Log to mentorship timeline
+      if (mentorId != null && studentId != null && internshipId != null && company != null) {
+        final timelineService = MentorshipTimelineService();
+        await timelineService.addRequestAnswered(
+          mentorId: mentorId,
+          studentId: studentId,
+          internshipId: internshipId,
+          company: company,
+        );
+      }
       
       print('FeedbackService: Successfully submitted mentor feedback');
     } catch (e) {
