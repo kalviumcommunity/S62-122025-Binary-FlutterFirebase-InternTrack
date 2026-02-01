@@ -1,4 +1,4 @@
-// lib\screens\mentor\mentor_student_detail_screen.dart
+// lib/screens/mentor/mentor_student_detail_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/colors.dart';
@@ -9,6 +9,10 @@ import '../../core/widgets/internship_widgets.dart';
 import '../../models/mentor_invitation_model.dart';
 import '../../providers/mentor_provider.dart';
 import '../../app/app_routes.dart';
+import 'widget/student_snapshot_card.dart';
+import 'widget/mentor_private_notes.dart';
+import 'widget/mentorship_timeline_widget.dart';
+import 'widget/student_resume_viewer.dart';
 
 class MentorStudentDetailScreen extends StatelessWidget {
   final MentorStudentLink student;
@@ -42,6 +46,7 @@ class MentorStudentDetailScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Header
                             Row(
                               children: [
                                 IconButton(
@@ -75,61 +80,39 @@ class MentorStudentDetailScreen extends StatelessWidget {
 
                             SizedBox(height: AppConstants.spaceXL),
 
-                            GlassContainer(
+                            // 📌 NEW: Student Snapshot Card
+                            StudentSnapshotCard(
+                              studentId: student.studentId,
                               isDark: isDark,
-                              padding: EdgeInsets.all(AppConstants.spaceL),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 70,
-                                    height: 70,
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [AppColors.bluePrimary, AppColors.blueLight],
-                                      ),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        student.studentName.substring(0, 1).toUpperCase(),
-                                        style: TextStyle(
-                                          fontSize: 32,
-                                          fontWeight: FontWeight.w700,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(width: AppConstants.spaceL),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '${internships.length} Applications',
-                                          style: TextStyle(
-                                            fontSize: 24,
-                                            fontWeight: FontWeight.w700,
-                                            color: isDark ? AppColors.pureWhite : AppColors.pureBlack,
-                                          ),
-                                        ),
-                                        SizedBox(height: 4),
-                                        Text(
-                                          'Total internship applications',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: AppColors.mediumGray,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            ),
+
+                            SizedBox(height: AppConstants.spaceL),
+
+                            // 📌 NEW: Resume Viewer
+                            StudentResumeViewer(
+                              studentId: student.studentId,
+                              isDark: isDark,
+                            ),
+
+                            SizedBox(height: AppConstants.spaceL),
+
+                            // 📌 NEW: Private Notes
+                            MentorPrivateNotes(
+                              studentId: student.studentId,
+                              isDark: isDark,
+                            ),
+
+                            SizedBox(height: AppConstants.spaceL),
+
+                            // 📌 NEW: Mentorship Timeline
+                            MentorshipTimelineWidget(
+                              studentId: student.studentId,
+                              isDark: isDark,
                             ),
 
                             SizedBox(height: AppConstants.spaceXL),
 
+                            // Internship Applications Section
                             Text(
                               'Internship Applications',
                               style: Theme.of(context).textTheme.headlineSmall,
@@ -272,6 +255,8 @@ class MentorStudentDetailScreen extends StatelessWidget {
                           ),
                         ),
                       ),
+                      
+                    SliverPadding(padding: EdgeInsets.only(bottom: AppConstants.spaceXL)),
                   ],
                 );
               },

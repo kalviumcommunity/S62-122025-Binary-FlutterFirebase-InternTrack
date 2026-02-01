@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/mentor_invitation_model.dart';
 import '../models/internship_model.dart';
 import '../models/feedback_cycle_model.dart';
+import 'mentorship_timeline_service.dart';
 
 class MentorService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -35,10 +36,43 @@ class MentorService {
     required String cycleId,
     required String feedback,
     String? nextStep,
+    String? mentorId,
+    String? studentId,
+    String? internshipId,
+    String? company,
   }) async {
     try {
       print('MentorService: Submitting feedback for cycle: $cycleId');
       
+      // Get cycle data to extract needed info
+      final cycleDoc = await _firestore
+          .collection('feedbackCycles')
+          .doc(cycleId)
+          .get();
+      
+      if (!cycleDoc.exists) {
+        throw 'Feedback cycle not found';
+      }
+      
+      final cycleData = cycleDoc.data()!;
+      final actualMentorId = mentorId ?? cycleData['mentorId'];
+      final actualStudentId = studentId ?? cycleData['studentId'];
+      final actualInternshipId = internshipId ?? cycleData['internshipId'];
+      
+      // Get company name if not provided
+      String actualCompany = company ?? 'Unknown';
+      if (company == null && actualInternshipId != null) {
+        final internshipDoc = await _firestore
+            .collection('internships')
+            .doc(actualInternshipId)
+            .get();
+        
+        if (internshipDoc.exists) {
+          actualCompany = internshipDoc.data()?['company'] ?? 'Unknown';
+        }
+      }
+      
+      // Update feedback cycle
       await _firestore.collection('feedbackCycles').doc(cycleId).update({
         'mentorFeedback': feedback,
         'suggestedNextStep': nextStep,
@@ -46,6 +80,23 @@ class MentorService {
         'respondedAt': Timestamp.now(),
         'seenByStudent': false,
       });
+      
+      print('MentorService: Feedback updated, now adding to timeline...');
+      
+      // Add to mentorship timeline
+      try {
+        final timelineService = MentorshipTimelineService();
+        await timelineService.addRequestAnswered(
+          mentorId: actualMentorId,
+          studentId: actualStudentId,
+          internshipId: actualInternshipId,
+          company: actualCompany,
+        );
+        print('MentorService: Successfully added to timeline');
+      } catch (timelineError) {
+        // Don't fail the whole operation if timeline fails
+        print('MentorService WARNING: Timeline update failed: $timelineError');
+      }
       
       print('MentorService: Successfully submitted feedback');
     } catch (e) {
@@ -180,6 +231,20 @@ class MentorService {
         'acceptedAt': Timestamp.now(),
       });
 
+      // Add to mentorship timeline
+      try {
+        final timelineService = MentorshipTimelineService();
+        await timelineService.addStudentLinked(
+          mentorId: mentorId,
+          studentId: studentId,
+          studentName: studentName,
+        );
+        print('MentorService: Successfully added student linked event to timeline');
+      } catch (timelineError) {
+        // Don't fail the whole operation if timeline fails
+        print('MentorService WARNING: Timeline update failed: $timelineError');
+      }
+
       print('MentorService: Successfully created mentor link and updated invitation');
     } catch (e) {
       print('MentorService ERROR creating mentor link: $e');
@@ -236,9 +301,6 @@ class MentorService {
           throw 'Already linked with this mentor';
         }
 
-        // Get mentor details
-        final mentorData = mentorSnapshot.docs.first.data();
-        
         // Create the link immediately
         await _firestore.collection('mentorStudentLinks').add({
           'studentId': studentId,
@@ -260,6 +322,20 @@ class MentorService {
           'sentAt': Timestamp.now(),
           'acceptedAt': Timestamp.now(),
         });
+
+        // Add to mentorship timeline
+        try {
+          final timelineService = MentorshipTimelineService();
+          await timelineService.addStudentLinked(
+            mentorId: mentorId,
+            studentId: studentId,
+            studentName: studentName,
+          );
+          print('MentorService: Successfully added student linked event to timeline');
+        } catch (timelineError) {
+          // Don't fail the whole operation if timeline fails
+          print('MentorService WARNING: Timeline update failed: $timelineError');
+        }
 
         print('MentorService: Successfully linked with existing mentor');
       } else {

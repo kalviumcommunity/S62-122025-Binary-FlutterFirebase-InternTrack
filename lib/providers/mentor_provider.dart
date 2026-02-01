@@ -80,7 +80,7 @@ class MentorProvider extends ChangeNotifier {
           .get();
       
       final studentIds = studentSnapshot.docs
-          .map((doc) => (doc.data() as Map<String, dynamic>)['studentId'] as String)
+          .map((doc) => doc.data()['studentId'] as String)
           .toList();
       
       if (studentIds.isEmpty) {
